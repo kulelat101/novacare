@@ -206,7 +206,7 @@ export default function NursesNotesPage() {
                   rows={4}
                   value={form.assessment}
                   onChange={(e) => handleChange('assessment', e.target.value)}
-                  placeholder="S: Patient reports... O: Vital signs, physical findings..."
+                  placeholder=""
                   className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                 />
               </div>
@@ -219,7 +219,7 @@ export default function NursesNotesPage() {
                   rows={3}
                   value={form.diagnosis}
                   onChange={(e) => handleChange('diagnosis', e.target.value)}
-                  placeholder="Acute pain r/t surgical incision AEB..."
+                  placeholder=""
                   className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                 />
               </div>
@@ -232,7 +232,7 @@ export default function NursesNotesPage() {
                   rows={4}
                   value={form.interventions}
                   onChange={(e) => handleChange('interventions', e.target.value)}
-                  placeholder="Administered analgesic as ordered, repositioned patient, health teaching..."
+                  placeholder=""
                   className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                 />
               </div>
@@ -243,7 +243,7 @@ export default function NursesNotesPage() {
                   rows={3}
                   value={form.evaluation}
                   onChange={(e) => handleChange('evaluation', e.target.value)}
-                  placeholder="Goal met / partially met / not met. Patient verbalized..."
+                  placeholder=""
                   className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                 />
               </div>
@@ -256,7 +256,7 @@ export default function NursesNotesPage() {
                   type="text"
                   value={form.nurse}
                   onChange={(e) => handleChange('nurse', e.target.value)}
-                  placeholder="e.g., RN L. Nepomuceno"
+                  placeholder=""
                   className="w-full rounded-xl border border-slate-300 px-4 py-2.5 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                 />
               </div>

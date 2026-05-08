@@ -90,6 +90,27 @@ export default function RecordForm({
     setError('');
   };
 
+  const handleLoadSavedRecord = (record) => {
+    const loadedData = {};
+
+    fields.forEach((field) => {
+      if (record[field.name] !== undefined && record[field.name] !== null) {
+        loadedData[field.name] = record[field.name];
+      } else {
+        loadedData[field.name] = initialState[field.name];
+      }
+    });
+
+    setFormData(loadedData);
+    setMessage('Saved record loaded into the form.');
+    setError('');
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
+
   return (
     <>
       <div className="form-shell space-y-6 pb-36">
@@ -214,6 +235,7 @@ export default function RecordForm({
             sortBy={savedRecordsSortBy}
             sortDirection={savedRecordsSortDirection}
             refreshKey={refreshKey}
+            onRecordSelect={handleLoadSavedRecord}
           />
         )}
       </div>

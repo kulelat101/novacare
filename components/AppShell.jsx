@@ -113,14 +113,6 @@ function SidebarContent({ onNavigate }) {
           </div>
         ))}
       </nav>
-
-      <div className="border-t border-white/10 p-4">
-        <div className="rounded-2xl bg-white/5 p-4 ring-1 ring-white/10">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100/65">Environment</p>
-          <p className="mt-2 text-sm font-semibold text-white">Firebase Demo</p>
-          <p className="mt-1 text-xs text-slate-300">Standardized clinical UI with reusable flowsheets.</p>
-        </div>
-      </div>
     </div>
   );
 }

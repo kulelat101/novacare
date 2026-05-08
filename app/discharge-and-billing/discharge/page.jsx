@@ -293,6 +293,8 @@ export default function DischargePage() {
           description="Prepare discharge diagnostics, instructions, follow-up plans, and billing clearance details."
         />
 
+        <BillingClearancePanel />
+        
         <RecordForm
           collectionName="dischargeSummaries"
           fields={fields}
@@ -301,7 +303,7 @@ export default function DischargePage() {
         />
         </div>
 
-        <BillingClearancePanel />
+        
       </div>
     </AppShell>
   );

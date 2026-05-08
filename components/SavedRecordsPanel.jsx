@@ -147,6 +147,7 @@ export default function SavedRecordsPanel({
   getBadge,
   renderDetails,
   canDelete = true,
+  onRecordSelect,
 }) {
   const { activePatientId } = usePatient();
   const [records, setRecords] = useState([]);
@@ -186,6 +187,14 @@ export default function SavedRecordsPanel({
     () => records.find((item) => item.id === selectedId),
     [records, selectedId]
   );
+
+  function handleSelectRecord(record) {
+    setSelectedId(record.id);
+
+    if (onRecordSelect) {
+      onRecordSelect(record);
+    }
+  }
 
   async function handleDelete(recordId) {
     if (!confirm('Delete this saved record?')) return;
@@ -248,7 +257,7 @@ export default function SavedRecordsPanel({
                 <button
                   key={record.id}
                   type="button"
-                  onClick={() => setSelectedId(record.id)}
+                  onClick={() => handleSelectRecord(record)}
                   className={`block w-full border-b border-slate-100 px-5 py-4 text-left transition ${
                     active ? 'bg-cyan-50/70' : 'bg-white hover:bg-slate-50'
                   }`}
