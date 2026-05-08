@@ -4,14 +4,22 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { canAccess, getDefaultRoute } from '@/lib/roles';
 import { useAuth } from './AuthProvider';
+import { usePatient } from './PatientProvider';
+
+const PATIENT_OPTION_PATHS = new Set([
+  '/patients/select',
+  '/admission/registration',
+]);
 
 export default function ProtectedRoute({ children }) {
   const { user, profile, loading } = useAuth();
+  const { activePatientId, loadingPatients } = usePatient();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || loadingPatients) return;
+
     if (!user) {
       router.replace('/login');
       return;
@@ -20,10 +28,15 @@ export default function ProtectedRoute({ children }) {
     const role = profile?.role;
     if (role && !canAccess(role, pathname)) {
       router.replace(getDefaultRoute(role));
+      return;
     }
-  }, [loading, user, profile, pathname, router]);
 
-  if (loading || !user) {
+    if (!activePatientId && !PATIENT_OPTION_PATHS.has(pathname)) {
+      router.replace('/patients/select');
+    }
+  }, [loading, loadingPatients, user, profile, pathname, router, activePatientId]);
+
+  if (loading || !user || loadingPatients) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="card p-6 text-center">

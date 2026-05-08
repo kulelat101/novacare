@@ -16,7 +16,12 @@ export default function ImagingPage() {
   return (
     <AppShell title="Imaging" subtitle="Diagnostic imaging reports">
       <PageIntro title="Imaging Report Entry" description="Record text-based imaging results for the demo system." />
-      <RecordForm collectionName="imagingResults" fields={fields} />
+      <RecordForm
+        collectionName="imagingResults"
+        fields={fields}
+        savedRecordsTitle="Saved Imaging Reports"
+        savedRecordsDescription="View previous imaging reports for this patient."
+      />
     </AppShell>
   );
 }

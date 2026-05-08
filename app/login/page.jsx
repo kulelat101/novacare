@@ -7,7 +7,6 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { createLoginLog } from '@/lib/audit';
-import { getDefaultRoute } from '@/lib/roles';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,7 +25,7 @@ export default function LoginPage() {
       const profileSnap = await getDoc(doc(db, 'users', credential.user.uid));
       const profile = profileSnap.exists() ? profileSnap.data() : { role: 'nurse', fullName: 'Demo Nurse' };
       await createLoginLog(credential.user, profile.role, profile.fullName);
-      router.replace(getDefaultRoute(profile.role));
+      router.replace('/patients/select');
     } catch (err) {
       setError('Unable to login. Check your Firebase account credentials.');
     } finally {
@@ -35,11 +34,11 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-cyan-700 via-cyan-600 to-slate-900 p-4">
+    <main className="min-h-screen bg-gradient-to-br from-cyan-800/90 via-cyan-600 to-slate-900 p-4">
       <div className="min-h-[calc(100vh-1rem)] overflow-hidden rounded-[2rem] bg-white lg:grid lg:grid-cols-2">
         
         {/* Branding section */}
-        <section className="flex flex-col items-center justify-center bg-cyan-800 px-6 py-12 text-center text-white lg:min-h-[calc(100vh-1rem)] lg:px-10">
+        <section className="flex flex-col items-center justify-center bg-cyan-600 px-6 py-12 text-center text-white lg:min-h-[calc(100vh-1rem)] lg:px-10">
           <img
             src="/images/novacare-logo.png"
             alt="NovaCare Logo"
@@ -123,8 +122,7 @@ export default function LoginPage() {
 // import { doc, getDoc } from 'firebase/firestore';
 // import { auth, db } from '@/lib/firebase';
 // import { createLoginLog } from '@/lib/audit';
-// import { getDefaultRoute } from '@/lib/roles';
-
+// 
 // export default function LoginPage() {
 //   const router = useRouter();
 //   const [email, setEmail] = useState('nurse@novacare.demo');
@@ -142,7 +140,7 @@ export default function LoginPage() {
 //       const profileSnap = await getDoc(doc(db, 'users', credential.user.uid));
 //       const profile = profileSnap.exists() ? profileSnap.data() : { role: 'nurse', fullName: 'Demo Nurse' };
 //       await createLoginLog(credential.user, profile.role, profile.fullName);
-//       router.replace(getDefaultRoute(profile.role));
+//       router.replace('/patients/select');
 //     } catch (err) {
 //       setError('Unable to login. Check your Firebase account credentials.');
 //     } finally {

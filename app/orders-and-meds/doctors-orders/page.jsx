@@ -16,7 +16,12 @@ export default function DoctorsOrdersPage() {
   return (
     <AppShell title="Doctor's Orders" subtitle="Orders and medication module">
       <PageIntro title="Order Entry" description="Record orders for medication, diagnostics, diet, nursing care, or discharge." />
-      <RecordForm collectionName="doctorOrders" fields={fields} />
+      <RecordForm
+        collectionName="doctorOrders"
+        fields={fields}
+        savedRecordsTitle="Saved Doctor's Orders"
+        savedRecordsDescription="View previous physician orders for this patient."
+      />
     </AppShell>
   );
 }

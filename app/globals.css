@@ -4,15 +4,25 @@
 
 :root {
   color-scheme: light;
+  --page-max-width: 1440px;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: #f8fafc;
+  background: #f4f7fb;
+  color: #0f172a;
 }
 
 @layer components {
   .card {
-    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+    @apply rounded-[26px] border border-slate-200 bg-white shadow-sm;
+  }
+
+  .section-kicker {
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400;
   }
 
   .label {
@@ -20,14 +30,28 @@ body {
   }
 
   .input {
-    @apply mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100;
+    @apply mt-1 w-full rounded-2xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100;
   }
 
   .btn-primary {
-    @apply rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply rounded-2xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-secondary {
-    @apply rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50;
+    @apply rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50;
   }
+
+  .content-shell,
+  .form-shell,
+  .action-shell {
+    width: 100%;
+    max-width: var(--page-max-width);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .section-card {
+    @apply rounded-[26px] border border-slate-200 bg-white shadow-sm;
+  }
+
 }
