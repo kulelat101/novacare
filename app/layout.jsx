@@ -2,7 +2,7 @@ import './globals.css';
 import AuthWrap from '@/components/AuthWrap';
 
 export const metadata = {
-  title: 'NovaCare HIS',
+  title: 'NovaCare',
   description: 'BSN210 Nursing Informatics Hospital Information System demo',
 };
 

@@ -10,10 +10,10 @@ import { ROLES } from '@/lib/roles';
 
 export default function SignupPage() {
   const router = useRouter();
-  const [fullName, setFullName] = useState('Demo Nurse');
-  const [email, setEmail] = useState('nurse@novacare.demo');
-  const [password, setPassword] = useState('demo123');
-  const [role, setRole] = useState(ROLES.NURSE);
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -42,7 +42,7 @@ export default function SignupPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
       <form onSubmit={handleSubmit} className="card w-full max-w-lg p-6 sm:p-8">
-        <p className="text-sm font-semibold uppercase tracking-wide text-cyan-700">NovaCare HIS</p>
+        <p className="text-sm font-semibold uppercase tracking-wide text-cyan-700">NovaCare</p>
         <h1 className="mt-2 text-3xl font-black text-slate-900">Create demo account</h1>
         <p className="mt-2 text-sm text-slate-500">Choose a role to test role-based access control.</p>
 
@@ -62,6 +62,7 @@ export default function SignupPage() {
           <div>
             <label className="label">Role</label>
             <select className="input" value={role} onChange={(e) => setRole(e.target.value)}>
+              <option value="">Select role</option>
               <option value="patient">Patient</option>
               <option value="doctor">Doctor</option>
               <option value="nurse">Nurse</option>

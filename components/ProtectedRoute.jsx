@@ -41,7 +41,7 @@ export default function ProtectedRoute({ children }) {
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="card p-6 text-center">
           <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-4 border-cyan-100 border-t-cyan-600" />
-          <p className="text-sm text-slate-600">Loading NovaCare HIS...</p>
+          <p className="text-sm text-slate-600">Loading NovaCare ...</p>
         </div>
       </div>
     );

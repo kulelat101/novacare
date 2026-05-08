@@ -15,36 +15,52 @@ const COLLECTION_NAME = 'intakeOutput';
 
 const shiftOptions = ['AM (6-2)', 'PM (2-10)', 'NIGHT (10-6)'];
 
-const intakeFields = [
-  { key: 'oral', label: 'Oral' },
-  { key: 'ivf', label: 'IVF' },
-  { key: 'bt', label: 'BT' },
-  { key: 'man', label: 'Man.' },
-  { key: 'ivAnt', label: 'IV Ant.' },
-];
+function dedupeFields(fields) {
+  const seen = new Set();
 
-const outputFields = [
-  { key: 'urine', label: 'Urine' },
+  return fields.filter((field) => {
+    if (seen.has(field.key)) return false;
+    seen.add(field.key);
+    return true;
+  });
+}
+
+const intakeFields = dedupeFields([
+  { key: 'po', label: 'PO' },
+  { key: 'ivf', label: 'IVF' },
+  { key: 'jt', label: 'JT' },
   { key: 'ngt', label: 'NGT' },
-  { key: 'vomit', label: 'Vom.' },
-  { key: 'others', label: 'Others' },
-];
+  { key: 'tpn', label: 'TPN' },
+  { key: 'meds', label: 'MEDS' },
+  { key: 'intakeOthers', label: 'OTHERS' },
+]);
+
+const outputFields = dedupeFields([
+  { key: 'urine', label: 'URINE' },
+  { key: 'bm', label: 'BM' },
+  { key: 'drainageTubes', label: 'DRAINAGE TUBES' },
+  { key: 'vomitus', label: 'VOMITUS' },
+  { key: 'bloodLoss', label: 'BLOOD LOSS' },
+  { key: 'outputOthers', label: 'OTHERS' },
+]);
 
 const createEmptyRow = () => ({
   id: createClientId('io'),
   datetime: getLocalDateTime(),
   shift: '',
-  oral: '',
+  po: '',
   ivf: '',
-  bt: '',
-  man: '',
-  ivAnt: '',
-  urine: '',
+  jt: '',
   ngt: '',
-  vomit: '',
-  others: '',
-  student: '',
-  remarks: '',
+  tpn: '',
+  meds: '',
+  intakeOthers: '',
+  urine: '',
+  bm: '',
+  drainageTubes: '',
+  vomitus: '',
+  bloodLoss: '',
+  outputOthers: '',
 });
 
 function toNumber(value) {
@@ -63,40 +79,44 @@ function getRowOutputTotal(row) {
 function hasMeaningfulValue(row) {
   const trackedFields = [
     'shift',
-    'oral',
-    'ivf',
-    'bt',
-    'man',
-    'ivAnt',
-    'urine',
-    'ngt',
-    'vomit',
-    'others',
-    'student',
-    'remarks',
+    ...intakeFields.map((field) => field.key),
+    ...outputFields.map((field) => field.key),
   ];
 
   return trackedFields.some((field) => String(row[field] || '').trim() !== '');
 }
 
-function normalizeRow(row) {
+function normalizeRow(row = {}) {
   return {
-    ...createEmptyRow(),
-    ...row,
     id: row.id || createClientId('io'),
     datetime: row.datetime || getLocalDateTime(),
     shift: row.shift || '',
-    oral: row.oral || '',
+    po: row.po || '',
     ivf: row.ivf || '',
-    bt: row.bt || '',
-    man: row.man || '',
-    ivAnt: row.ivAnt || '',
-    urine: row.urine || '',
+    jt: row.jt || '',
     ngt: row.ngt || '',
-    vomit: row.vomit || '',
-    others: row.others || '',
-    student: row.student || '',
-    remarks: row.remarks || '',
+    tpn: row.tpn || '',
+    meds: row.meds || '',
+    intakeOthers: row.intakeOthers || row.inputOthers || '',
+    urine: row.urine || '',
+    bm: row.bm || '',
+    drainageTubes: row.drainageTubes || '',
+    vomitus: row.vomitus || row.vomit || '',
+    bloodLoss: row.bloodLoss || '',
+    outputOthers: row.outputOthers || row.others || '',
+  };
+}
+
+function buildCleanSaveRow(row) {
+  const normalizedRow = normalizeRow(row);
+  const intakeTotal = getRowIntakeTotal(normalizedRow);
+  const outputTotal = getRowOutputTotal(normalizedRow);
+
+  return {
+    ...normalizedRow,
+    intakeTotal,
+    outputTotal,
+    balance: intakeTotal - outputTotal,
   };
 }
 
@@ -194,17 +214,12 @@ export default function IntakeOutputPage() {
     setError('');
 
     try {
-      const rowsToSave = rows
-        .filter(hasMeaningfulValue)
-        .map((row) => ({
-          ...row,
-          intakeTotal: getRowIntakeTotal(row),
-          outputTotal: getRowOutputTotal(row),
-          balance: getRowIntakeTotal(row) - getRowOutputTotal(row),
-        }));
+      const rowsToSave = rows.filter(hasMeaningfulValue).map(buildCleanSaveRow);
 
       await savePatientRows(COLLECTION_NAME, rowsToSave);
+
       setRows(rowsToSave.length > 0 ? rowsToSave.map(normalizeRow) : [createEmptyRow()]);
+
       setMessage(
         rowsToSave.length > 0
           ? 'Intake and output records saved to Firestore.'
@@ -234,7 +249,7 @@ export default function IntakeOutputPage() {
       <div className="pb-36">
         <PageIntro
           title="Intake & Output Flowsheet"
-          description="Record intake and output in one grouped clinical table without selecting intake or output type."
+          description="Record intake and output in one grouped clinical table."
         />
 
         {(message || error) && (
@@ -251,18 +266,30 @@ export default function IntakeOutputPage() {
 
         <section className="mb-6 grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-5 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wide text-cyan-700">Total Intake</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-cyan-700">
+              Total Intake
+            </p>
             <h3 className="mt-2 text-2xl font-bold text-cyan-900">{totals.intake} mL</h3>
           </div>
 
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Total Output</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-amber-700">
+              Total Output
+            </p>
             <h3 className="mt-2 text-2xl font-bold text-amber-900">{totals.output} mL</h3>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Fluid Balance</p>
-            <h3 className="mt-2 text-2xl font-bold text-slate-900">{totals.balance} mL</h3>
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+              Fluid Balance
+            </p>
+            <h3
+              className={`mt-2 text-2xl font-bold ${
+                totals.balance < 0 ? 'text-red-600' : 'text-slate-900'
+              }`}
+            >
+              {totals.balance} mL
+            </h3>
             <p className="mt-1 text-xs text-slate-500">Intake minus output.</p>
           </div>
         </section>
@@ -271,33 +298,47 @@ export default function IntakeOutputPage() {
           <div className="border-b border-slate-200 px-6 py-4">
             <h2 className="text-lg font-semibold text-slate-900">I&O Sheet</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Enter values directly under Intake or Output columns. Row totals are calculated automatically.
+              Enter values directly under Intake or Output columns. Row totals are calculated
+              automatically.
             </p>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1350px] border-collapse text-sm">
+            <table className="w-full min-w-[1500px] border-collapse text-sm">
               <thead className="sticky top-0 z-10 bg-slate-50">
                 <tr className="border-b border-slate-200">
-                  <th rowSpan="2" className="border-r border-slate-200 px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+                  <th
+                    rowSpan="2"
+                    className="border-r border-slate-200 px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600"
+                  >
                     Date / Time
                   </th>
-                  <th rowSpan="2" className="border-r border-slate-200 px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+
+                  <th
+                    rowSpan="2"
+                    className="border-r border-slate-200 px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600"
+                  >
                     Shift
                   </th>
-                  <th colSpan="6" className="border-r border-slate-200 px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wide text-cyan-700">
+
+                  <th
+                    colSpan={intakeFields.length + 1}
+                    className="border-r border-slate-200 px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wide text-cyan-700"
+                  >
                     Intake
                   </th>
-                  <th colSpan="5" className="border-r border-slate-200 px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wide text-amber-700">
+
+                  <th
+                    colSpan={outputFields.length + 1}
+                    className="border-r border-slate-200 px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wide text-amber-700"
+                  >
                     Output
                   </th>
-                  <th rowSpan="2" className="border-r border-slate-200 px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600">
-                    Student
-                  </th>
-                  <th rowSpan="2" className="border-r border-slate-200 px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600">
-                    Remarks
-                  </th>
-                  <th rowSpan="2" className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+
+                  <th
+                    rowSpan="2"
+                    className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600"
+                  >
                     Action
                   </th>
                 </tr>
@@ -311,6 +352,7 @@ export default function IntakeOutputPage() {
                       {field.label}
                     </th>
                   ))}
+
                   <th className="border-r border-slate-200 px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600">
                     Total
                   </th>
@@ -323,6 +365,7 @@ export default function IntakeOutputPage() {
                       {field.label}
                     </th>
                   ))}
+
                   <th className="border-r border-slate-200 px-3 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600">
                     Total
                   </th>
@@ -380,26 +423,6 @@ export default function IntakeOutputPage() {
                         {outputTotal}
                       </td>
 
-                      <td className="border-r border-slate-100 px-3 py-3">
-                        <input
-                          type="text"
-                          value={row.student || ''}
-                          onChange={(e) => updateRow(row.id, 'student', e.target.value)}
-                          placeholder="Student name"
-                          className="w-[170px] rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
-                        />
-                      </td>
-
-                      <td className="border-r border-slate-100 px-3 py-3">
-                        <input
-                          type="text"
-                          value={row.remarks || ''}
-                          onChange={(e) => updateRow(row.id, 'remarks', e.target.value)}
-                          placeholder="Remarks"
-                          className="w-[200px] rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
-                        />
-                      </td>
-
                       <td className="px-3 py-3">
                         <button
                           type="button"
@@ -417,7 +440,7 @@ export default function IntakeOutputPage() {
           </div>
         </section>
 
-        <div className="fixed bottom-6 left-4 right-4 z-40 lg:left-72 lg:right-0">
+        <div className="fixed bottom-6 left-4 right-4 z-40 xl:left-72 xl:right-6">
           <div className="action-shell">
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white/95 px-6 py-4 shadow-2xl backdrop-blur">
               <div>
