@@ -25,10 +25,15 @@ function SidebarContent({ onNavigate }) {
     <div className="flex h-full flex-col">
       <div className="border-b border-cyan-800/40 p-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-lg font-black text-cyan-700">N</div>
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-800 p-2 shadow-sm">
+            <img
+              src="/images/novacare-icon.png"
+              alt="NovaCare Icon"
+              className="h-full w-full object-contain"
+            />
+          </div>
           <div>
-            <p className="font-bold text-white">NovaCare HIS</p>
-            <p className="text-xs text-cyan-100">BSN210 Demo System</p>
+            <p className="font-bold text-white">NovaCare</p>
           </div>
         </div>
       </div>
