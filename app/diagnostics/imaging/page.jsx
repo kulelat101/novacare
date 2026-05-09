@@ -784,7 +784,7 @@ export default function ImagingPage() {
       </div>
 
       {!isPatientView && (
-      <div className="fixed bottom-6 left-4 right-4 z-50 lg:left-72 lg:right-0">
+      <div className="fixed bottom-6 left-4 right-4 z-50 xl:left-72 xl:right-0">
         <div className="action-shell rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
           <div className="flex flex-wrap justify-end gap-3">
             <button

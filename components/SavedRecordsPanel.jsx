@@ -200,6 +200,7 @@ export default function SavedRecordsPanel({
   getBadge,
   renderDetails,
   canDelete = true,
+  suppressLoadError = false,
   onRecordSelect,
 }) {
   const { activePatientId } = usePatient();
@@ -210,11 +211,20 @@ export default function SavedRecordsPanel({
   const [error, setError] = useState('');
 
   async function loadRecords() {
+    if (!activePatientId) {
+      setRecords([]);
+      setSelectedId('');
+      setError('');
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
     try {
       const rows = await loadPatientRows(collectionName, {
+        patientId: activePatientId,
         sortBy,
         sortDirection,
       });
@@ -226,7 +236,9 @@ export default function SavedRecordsPanel({
       });
     } catch (err) {
       console.error(err);
-      setError('Failed to load saved records from Firestore.');
+      setRecords([]);
+      setSelectedId('');
+      setError(suppressLoadError ? '' : 'Failed to load saved records from Firestore.');
     } finally {
       setIsLoading(false);
     }
@@ -256,7 +268,7 @@ export default function SavedRecordsPanel({
     setError('');
 
     try {
-      await deletePatientDocument(collectionName, recordId);
+      await deletePatientDocument(collectionName, recordId, { patientId: activePatientId });
       await loadRecords();
     } catch (err) {
       console.error(err);
@@ -297,8 +309,8 @@ export default function SavedRecordsPanel({
       ) : records.length === 0 ? (
         <div className="px-6 py-8 text-sm text-slate-500">{emptyMessage}</div>
       ) : (
-        <div className="grid gap-0 lg:grid-cols-[360px,1fr]">
-          <div className="max-h-[540px] overflow-y-auto border-b border-slate-200 lg:border-b-0 lg:border-r">
+        <div className="grid min-w-0 gap-0 2xl:grid-cols-[360px,1fr]">
+          <div className="max-h-[540px] overflow-y-auto border-b border-slate-200 2xl:border-b-0 2xl:border-r">
             {records.map((record, index) => {
               const active = record.id === selectedId;
               const subtitle = getSubtitle
@@ -334,7 +346,7 @@ export default function SavedRecordsPanel({
             })}
           </div>
 
-          <div className="p-5 lg:p-6">
+          <div className="min-w-0 p-5 lg:p-6">
             {selectedRecord ? (
               <div className="space-y-5">
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">

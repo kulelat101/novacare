@@ -361,18 +361,13 @@ export default function PatientRegistrationForm({
     setIsSendingReset(false);
 
     try {
-      const chartPatientId = String(
-        form.patientId || loadedPatient?.patientId || form.caseNo || generatePatientId()
-      ).trim();
-      const targetDocId = String(
-        isEditMode
-          ? loadedPatient?.docId || loadedPatient?.id || patientIdToEdit || chartPatientId
-          : chartPatientId
+      const patientId = String(
+        form.patientId || patientIdToEdit || loadedPatient?.patientId || loadedPatient?.id || form.caseNo || generatePatientId()
       ).trim();
       const emailAddress = String(form.emailAddress || form.email || '').trim().toLowerCase();
 
       if (patientSelfEdit) {
-        if (!targetDocId) {
+        if (!patientId) {
           setError('Patient chart not found. Please contact hospital staff.');
           return;
         }
@@ -383,7 +378,6 @@ export default function PatientRegistrationForm({
         }
 
         const selfUpdatePayload = {
-          patientId: chartPatientId,
           lastName: form.lastName || '',
           firstName: form.firstName || '',
           middleName: form.middleName || '',
@@ -402,14 +396,13 @@ export default function PatientRegistrationForm({
           fullName: fullName || `${form.firstName} ${form.lastName}`,
         };
 
-        await savePatientProfile(targetDocId, selfUpdatePayload, { merge: true });
-        const refreshedPatient = await refreshActivePatient(targetDocId);
+        await savePatientProfile(patientId, selfUpdatePayload, { merge: true });
+        const refreshedPatient = await refreshActivePatient(patientId);
         const savedPatient = refreshedPatient || {
           ...(loadedPatient || {}),
           ...selfUpdatePayload,
-          docId: targetDocId,
-          id: targetDocId,
-          patientId: chartPatientId,
+          id: patientId,
+          patientId,
         };
 
         setLoadedPatient(savedPatient);
@@ -419,14 +412,14 @@ export default function PatientRegistrationForm({
         return;
       }
 
-      if (!chartPatientId || !form.firstName || !form.lastName || !emailAddress) {
+      if (!patientId || !form.firstName || !form.lastName || !emailAddress) {
         setError('Please provide Patient ID, First Name, Family Name, and Email Address.');
         return;
       }
 
       const accountResult = (!form.patientUid && !form.patientUserId)
         ? await createOrLinkPatientAccount({
-            patientId: targetDocId,
+            patientId,
             email: emailAddress,
             fullName: fullName || `${form.firstName} ${form.lastName}`,
           })
@@ -435,9 +428,8 @@ export default function PatientRegistrationForm({
       const linkedUid = accountResult?.uid || form.patientUid || form.patientUserId || '';
       const payload = {
         ...form,
-        docId: targetDocId,
-        id: targetDocId,
-        patientId: chartPatientId,
+        patientId,
+        id: patientId,
         email: emailAddress,
         emailAddress,
         fullName: fullName || `${form.firstName} ${form.lastName}`,
@@ -450,10 +442,10 @@ export default function PatientRegistrationForm({
       let savedPatient;
 
       if (isEditMode) {
-        await savePatientProfile(targetDocId, payload, { merge: true });
+        await savePatientProfile(patientId, payload, { merge: true });
         await refreshPatients();
-        await refreshActivePatient(targetDocId);
-        savedPatient = { ...payload, docId: targetDocId, id: targetDocId };
+        await refreshActivePatient(patientId);
+        savedPatient = { ...payload, id: patientId };
         await selectPatient(savedPatient);
       } else {
         savedPatient = await createPatient(payload);
@@ -464,7 +456,7 @@ export default function PatientRegistrationForm({
           email: accountResult.email,
           temporaryPassword: accountResult.temporaryPassword,
           fullName: savedPatient.fullName || fullName || savedPatient.patientId,
-          patientId: chartPatientId,
+          patientId,
         });
       }
 
@@ -846,7 +838,7 @@ export default function PatientRegistrationForm({
         </>
       )}
 
-      <div className="fixed bottom-6 left-4 right-4 z-50 lg:left-72 lg:right-0">
+      <div className="fixed bottom-6 left-4 right-4 z-50 xl:left-72 xl:right-0">
         <div className="content-shell rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
           <div className="flex flex-wrap justify-end gap-3">
             <button

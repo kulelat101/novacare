@@ -341,7 +341,7 @@ export default function IVSheetPage() {
         </section>
 
 
-        <div className="fixed bottom-6 left-4 right-4 z-40 lg:left-72 lg:right-0">
+        <div className="fixed bottom-6 left-4 right-4 z-40 xl:left-72 xl:right-0">
           <div className="action-shell">
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white/95 px-6 py-4 shadow-2xl backdrop-blur">
               <div>

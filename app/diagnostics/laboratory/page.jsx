@@ -4,6 +4,8 @@ import { useMemo, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import PageIntro from '@/components/PageIntro';
 import SavedRecordsPanel from '@/components/SavedRecordsPanel';
+import { useAuth } from '@/components/AuthProvider';
+import { ROLES } from '@/lib/roles';
 import { addPatientRecord } from '@/lib/patientFirestore';
 
 const LAB_PANELS = [
@@ -257,6 +259,8 @@ function getSectionClasses(section) {
 }
 
 export default function LaboratoryPage() {
+  const { profile } = useAuth();
+  const isPatientView = profile?.role === ROLES.PATIENT;
   const [selectedPanelId, setSelectedPanelId] = useState('');
 
   const selectedPanel = useMemo(
@@ -402,6 +406,38 @@ export default function LaboratoryPage() {
     } finally {
       setIsSaving(false);
     }
+  }
+
+
+  if (isPatientView) {
+    return (
+      <AppShell title="Laboratory" subtitle="View diagnostic results">
+        <div className="space-y-6">
+          <PageIntro
+            title="Laboratory Results"
+            description="View saved laboratory reports connected to your patient chart."
+          />
+
+          <div className="rounded-2xl border border-cyan-100 bg-cyan-50 px-5 py-4 text-sm font-medium text-cyan-800">
+            This page is view-only for patient accounts.
+          </div>
+
+          <SavedRecordsPanel
+            collectionName="laboratoryResults"
+            title="Laboratory Reports"
+            description="Saved CBC, coagulation, blood typing, urinalysis, fecalysis, chemistry, immunology, and clinical microscopy reports for this patient."
+            emptyMessage="No laboratory reports are available yet."
+            sortBy="reportDate"
+            sortDirection="desc"
+            canDelete={false}
+            suppressLoadError
+            getTitle={(record) => record.order || record.panelName || record.title || 'Laboratory Report'}
+            getSubtitle={(record) => `${formatDate(record.reportDate)} • ${record.reportStatus || 'No status'}`}
+            getBadge={(record) => record.category || 'Lab'}
+          />
+        </div>
+      </AppShell>
+    );
   }
 
   return (
@@ -621,7 +657,7 @@ export default function LaboratoryPage() {
         />
       </div>
 
-      <div className="fixed bottom-6 left-4 right-4 z-50 lg:left-72 lg:right-0">
+      <div className="fixed bottom-6 left-4 right-4 z-50 xl:left-72 xl:right-0">
         <div className="action-shell rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
           <div className="flex flex-wrap justify-end gap-3">
             <button
