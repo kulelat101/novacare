@@ -204,7 +204,7 @@ const fields = [
         label: 'RADIAL PULSES EQUAL, +2',
         defaultChecked: normalChecked,
         defaultNote: '',
-        placeholder: 'e.g. Equal, +2',
+        placeholder: '',
         extraCheckboxes: [
           { key: 'other', label: 'OTHER', hasText: true, placeholder: '' },
         ],
@@ -212,7 +212,7 @@ const fields = [
       { key: 'tempVsTrunk', label: 'TEMP VS. TRUNK (WARM / COOL)', defaultChecked: normalChecked, defaultNote: '' },
       { key: 'gripEqualStrong', label: 'GRIP EQUAL AND STRONG', defaultChecked: normalChecked, defaultNote: '' },
       { key: 'capillaryRefill', label: 'CAPILLARY REFILL <3 SEC', defaultChecked: normalChecked, hasNote: false },
-      { key: 'veinFillingRapid', label: 'VEIN FILLING RAPID', defaultChecked: normalChecked, defaultNote: 'Rapid' },
+      { key: 'veinFillingRapid', label: 'VEIN FILLING RAPID', defaultChecked: normalChecked, defaultNote: '' },
     ],
   },
 
@@ -224,7 +224,7 @@ const fields = [
     type: 'assessment-table',
     rows: [
       { key: 'hairPresent', label: 'HAIR PRESENT', defaultChecked: normalChecked, hasNote: false },
-      { key: 'edema', label: 'EDEMA', defaultChecked: normalChecked, defaultNote: 'No edema noted' },
+      { key: 'edema', label: 'EDEMA', defaultChecked: normalChecked, defaultNote: '' },
       { key: 'footStrength', label: 'FOOT STRENGTH', defaultChecked: normalChecked, defaultNote: '' },
       {
         key: 'homans',

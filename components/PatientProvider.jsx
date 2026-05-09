@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { ROLES } from '@/lib/roles';
 import {
   clearStoredActivePatientId,
   getStoredActivePatientId,
@@ -47,16 +48,23 @@ export function getPatientDiagnosis(patient) {
   return patient.primaryDiagnosis || patient.admittingDx || patient.finalDiagnosis || '—';
 }
 
+function getLinkedPatientId(profile) {
+  return profile?.linkedPatientId || profile?.patientId || '';
+}
+
 export function PatientProvider({ children }) {
-  const { user } = useAuth();
+  const { user, profile, loading } = useAuth();
   const [activePatientId, setActivePatientId] = useState('');
   const [activePatient, setActivePatient] = useState(null);
   const [patients, setPatients] = useState([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [patientError, setPatientError] = useState('');
 
+  const isPatientUser = profile?.role === ROLES.PATIENT;
+  const linkedPatientId = getLinkedPatientId(profile);
+
   const refreshPatients = useCallback(async () => {
-    if (!user) {
+    if (!user || loading) {
       setPatients([]);
       setActivePatient(null);
       setActivePatientId('');
@@ -68,6 +76,31 @@ export function PatientProvider({ children }) {
     setPatientError('');
 
     try {
+      if (isPatientUser) {
+        if (!linkedPatientId) {
+          clearStoredActivePatientId();
+          setPatients([]);
+          setActivePatient(null);
+          setActivePatientId('');
+          setPatientError('No patient chart is linked to this account yet.');
+          return [];
+        }
+
+        const profileRow = await loadPatientProfile(linkedPatientId);
+        const patientRows = profileRow ? [profileRow] : [];
+
+        setStoredActivePatientId(linkedPatientId);
+        setActivePatientId(linkedPatientId);
+        setActivePatient(profileRow);
+        setPatients(patientRows);
+
+        if (!profileRow) {
+          setPatientError('The linked patient chart could not be found.');
+        }
+
+        return patientRows;
+      }
+
       const rows = await loadPatients();
       setPatients(rows);
       return rows;
@@ -78,25 +111,30 @@ export function PatientProvider({ children }) {
     } finally {
       setLoadingPatients(false);
     }
-  }, [user]);
+  }, [user, loading, isPatientUser, linkedPatientId]);
 
   const refreshActivePatient = useCallback(async (patientId = activePatientId) => {
-    if (!user || !patientId) {
+    if (!user || loading || !patientId) {
       setActivePatient(null);
       return null;
     }
 
+    if (isPatientUser && patientId !== linkedPatientId) {
+      setPatientError('This patient account is not allowed to open another chart.');
+      return null;
+    }
+
     try {
-      const profile = await loadPatientProfile(patientId);
-      setActivePatient(profile);
-      return profile;
+      const profileRow = await loadPatientProfile(patientId);
+      setActivePatient(profileRow);
+      return profileRow;
     } catch (err) {
       console.error(err);
       setPatientError('Failed to load active patient details.');
       setActivePatient(null);
       return null;
     }
-  }, [activePatientId, user]);
+  }, [activePatientId, user, loading, isPatientUser, linkedPatientId]);
 
   const selectPatient = useCallback(async (patientOrId) => {
     const patientId = typeof patientOrId === 'string'
@@ -104,6 +142,11 @@ export function PatientProvider({ children }) {
       : patientOrId?.patientId || patientOrId?.id;
 
     if (!patientId) return null;
+
+    if (isPatientUser && patientId !== linkedPatientId) {
+      setPatientError('This patient account is not allowed to select another chart.');
+      return null;
+    }
 
     setStoredActivePatientId(patientId);
     setActivePatientId(patientId);
@@ -115,7 +158,7 @@ export function PatientProvider({ children }) {
     }
 
     return refreshActivePatient(patientId);
-  }, [refreshActivePatient]);
+  }, [refreshActivePatient, isPatientUser, linkedPatientId]);
 
   const clearActivePatient = useCallback(() => {
     clearStoredActivePatientId();
@@ -143,10 +186,41 @@ export function PatientProvider({ children }) {
     let mounted = true;
 
     async function hydratePatientContext() {
+      if (loading) return;
+
       if (!user) {
         clearActivePatient();
         setPatients([]);
         setLoadingPatients(false);
+        return;
+      }
+
+      if (isPatientUser) {
+        if (!linkedPatientId) {
+          clearActivePatient();
+          setPatients([]);
+          setPatientError('No patient chart is linked to this account yet.');
+          setLoadingPatients(false);
+          return;
+        }
+
+        setLoadingPatients(true);
+        setPatientError('');
+        setStoredActivePatientId(linkedPatientId);
+        setActivePatientId(linkedPatientId);
+
+        const profileRow = await loadPatientProfile(linkedPatientId).catch((err) => {
+          console.error(err);
+          setPatientError('Failed to load linked patient details.');
+          return null;
+        });
+
+        if (mounted) {
+          setActivePatient(profileRow);
+          setPatients(profileRow ? [profileRow] : []);
+          setLoadingPatients(false);
+        }
+
         return;
       }
 
@@ -159,14 +233,14 @@ export function PatientProvider({ children }) {
         return;
       }
 
-      const profile = await loadPatientProfile(storedPatientId).catch((err) => {
+      const profileRow = await loadPatientProfile(storedPatientId).catch((err) => {
         console.error(err);
         setPatientError('Failed to load active patient details.');
         return null;
       });
 
       if (mounted) {
-        setActivePatient(profile);
+        setActivePatient(profileRow);
       }
     }
 
@@ -175,7 +249,7 @@ export function PatientProvider({ children }) {
     return () => {
       mounted = false;
     };
-  }, [user, clearActivePatient, refreshPatients]);
+  }, [user, loading, profile, isPatientUser, linkedPatientId, clearActivePatient, refreshPatients]);
 
   const value = useMemo(() => ({
     activePatient,

@@ -4,12 +4,14 @@ import { useEffect, useMemo, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import PageIntro from '@/components/PageIntro';
 import RecordForm from '@/components/RecordForm';
+import SavedRecordsPanel from '@/components/SavedRecordsPanel';
+import { useAuth } from '@/components/AuthProvider';
+import { ROLES } from '@/lib/roles';
 import { loadPatientRows } from '@/lib/patientFirestore';
 
 const BILLING_COLLECTION_NAME = 'billingItems';
 
 const fields = [
-  // Discharge Information
   {
     section: 'Discharge Information',
     name: 'dateTimeOfDischarge',
@@ -48,8 +50,6 @@ const fields = [
     ],
     required: true,
   },
-
-  // Discharge Diagnostics
   {
     section: 'Discharge Diagnostics',
     name: 'finalDiagnosis',
@@ -72,8 +72,6 @@ const fields = [
     type: 'textarea',
     placeholder: '',
   },
-
-  // Discharge Instructions
   {
     section: 'Discharge Instructions',
     name: 'dischargeMedications',
@@ -209,7 +207,6 @@ function BillingClearancePanel() {
         </button>
       </div>
 
-
       {error && (
         <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-700">
           {error}
@@ -259,7 +256,6 @@ function BillingClearancePanel() {
           </h3>
         </div>
 
-
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
           <p className="text-[11px] font-bold uppercase tracking-wide text-amber-700">
             Balance
@@ -306,29 +302,45 @@ function BillingClearancePanel() {
 }
 
 export default function DischargePage() {
+  const { profile } = useAuth();
+  const isPatientView = profile?.role === ROLES.PATIENT;
+
   return (
     <AppShell
       title="Discharge"
-      subtitle="Discharge planning, diagnostics, instructions, and billing clearance"
+      subtitle={isPatientView ? 'View discharge summary and billing clearance' : 'Discharge planning, diagnostics, instructions, and billing clearance'}
     >
-      <div className="space-y-6 pb-36">
+      <div className={isPatientView ? 'space-y-6' : 'space-y-6 pb-36'}>
         <div className="form-shell space-y-6">
-        <PageIntro
-          title="Discharge Summary"
-          description="Prepare discharge diagnostics, instructions, follow-up plans, and billing clearance details."
-        />
+          <PageIntro
+            title="Discharge Summary"
+            description={isPatientView ? 'Patients can view saved discharge summaries only.' : 'Prepare discharge diagnostics, instructions, follow-up plans, and billing clearance details.'}
+          />
 
-        <BillingClearancePanel />
-        
-        <RecordForm
-          collectionName="dischargeSummaries"
-          fields={fields}
-          savedRecordsTitle="Saved Discharge Summaries"
-          savedRecordsDescription="View previously saved discharge summaries for this patient."
-        />
+          {isPatientView && (
+            <div className="rounded-2xl border border-cyan-100 bg-cyan-50 px-5 py-4 text-sm font-medium text-cyan-800">
+              This page is view-only for patient accounts.
+            </div>
+          )}
+
+          <BillingClearancePanel />
+
+          {isPatientView ? (
+            <SavedRecordsPanel
+              collectionName="dischargeSummaries"
+              title="Saved Discharge Summaries"
+              description="View previously saved discharge summaries for this patient."
+              canDelete={false}
+            />
+          ) : (
+            <RecordForm
+              collectionName="dischargeSummaries"
+              fields={fields}
+              savedRecordsTitle="Saved Discharge Summaries"
+              savedRecordsDescription="View previously saved discharge summaries for this patient."
+            />
+          )}
         </div>
-
-        
       </div>
     </AppShell>
   );

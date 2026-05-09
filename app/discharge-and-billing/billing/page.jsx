@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import PageIntro from '@/components/PageIntro';
+import { useAuth } from '@/components/AuthProvider';
+import { ROLES } from '@/lib/roles';
 import {
   clearPatientCollection,
   createClientId,
@@ -40,16 +42,19 @@ function formatPeso(value) {
   })}`;
 }
 
+function displayText(value) {
+  if (value === null || value === undefined || value === '') return '—';
+  return String(value);
+}
+
 export default function BillingPage() {
+  const { profile } = useAuth();
+  const isPatientView = profile?.role === ROLES.PATIENT;
   const [rows, setRows] = useState([createEmptyRow()]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    loadRows();
-  }, []);
 
   const loadRows = async () => {
     setIsLoading(true);
@@ -61,7 +66,7 @@ export default function BillingPage() {
         sortDirection: 'asc',
       });
 
-      setRows(savedRows.length > 0 ? savedRows : [createEmptyRow()]);
+      setRows(savedRows.length > 0 ? savedRows : isPatientView ? [] : [createEmptyRow()]);
     } catch (err) {
       console.error(err);
       setError('Failed to load billing records from Firestore.');
@@ -69,6 +74,10 @@ export default function BillingPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadRows();
+  }, [isPatientView]);
 
   const summary = useMemo(() => {
     return rows.reduce(
@@ -161,12 +170,16 @@ export default function BillingPage() {
     }
   };
 
+  const headers = isPatientView
+    ? ['Category', 'Description', 'Amount (₱)', 'Status', 'Remarks']
+    : ['Category', 'Description', 'Amount (₱)', 'Status', 'Remarks', 'Actions'];
+
   return (
-    <AppShell title="Billing" subtitle="Patient billing items and payment status">
-      <div className="pb-36">
+    <AppShell title="Billing" subtitle={isPatientView ? 'View billing statement' : 'Patient billing items and payment status'}>
+      <div className={isPatientView ? '' : 'pb-36'}>
         <PageIntro
           title="Billing Sheet"
-          description="Track patient charges, payment status, and billing remarks."
+          description={isPatientView ? 'View your billing statement and balance.' : 'Track patient charges, payment status, and billing remarks.'}
         />
 
         {(message || error) && (
@@ -178,6 +191,12 @@ export default function BillingPage() {
             }`}
           >
             {error || message}
+          </div>
+        )}
+
+        {isPatientView && (
+          <div className="mb-6 rounded-2xl border border-cyan-100 bg-cyan-50 px-5 py-4 text-sm font-medium text-cyan-800">
+            This page is view-only for patient accounts.
           </div>
         )}
 
@@ -218,99 +237,127 @@ export default function BillingPage() {
           <div className="border-b border-slate-200 px-6 py-4">
             <h2 className="text-lg font-semibold text-slate-900">Billing Items</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Billing items here are used by the Discharge Billing Clearance panel.
+              {isPatientView
+                ? 'These billing items are read-only for patient accounts.'
+                : 'Billing items here are used by the Discharge Billing Clearance panel.'}
             </p>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1150px] border-collapse">
+            <table className="w-full min-w-[1050px] border-collapse">
               <thead className="sticky top-0 z-10 bg-slate-50">
                 <tr className="border-b border-slate-200">
-                  {['Category', 'Description', 'Amount (₱)', 'Status', 'Remarks', 'Actions'].map(
-                    (header) => (
-                      <th
-                        key={header}
-                        className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600"
-                      >
-                        {header}
-                      </th>
-                    )
-                  )}
+                  {headers.map((header) => (
+                    <th
+                      key={header}
+                      className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-600"
+                    >
+                      {header}
+                    </th>
+                  ))}
                 </tr>
               </thead>
 
               <tbody>
-                {rows.map((row) => (
+                {rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={headers.length} className="px-6 py-8 text-sm text-slate-500">
+                      No billing items found yet.
+                    </td>
+                  </tr>
+                ) : rows.map((row) => (
                   <tr key={row.id} className="border-b border-slate-100 hover:bg-cyan-50/40">
                     <td className="px-3 py-3">
-                      <select
-                        value={row.category || ''}
-                        onChange={(e) => updateRow(row.id, 'category', e.target.value)}
-                        className="w-[190px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
-                      >
-                        <option value="">Select category</option>
-                        {categoryOptions.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
+                      {isPatientView ? (
+                        <p className="text-sm font-semibold text-slate-800">{displayText(row.category)}</p>
+                      ) : (
+                        <select
+                          value={row.category || ''}
+                          onChange={(e) => updateRow(row.id, 'category', e.target.value)}
+                          className="w-[190px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+                        >
+                          <option value="">Select category</option>
+                          {categoryOptions.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </td>
 
                     <td className="px-3 py-3">
-                      <input
-                        type="text"
-                        value={row.description || ''}
-                        onChange={(e) => updateRow(row.id, 'description', e.target.value)}
-                        placeholder="Description"
-                        className="w-[280px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
-                      />
+                      {isPatientView ? (
+                        <p className="text-sm text-slate-700">{displayText(row.description)}</p>
+                      ) : (
+                        <input
+                          type="text"
+                          value={row.description || ''}
+                          onChange={(e) => updateRow(row.id, 'description', e.target.value)}
+                          placeholder="Description"
+                          className="w-[280px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+                        />
+                      )}
                     </td>
 
                     <td className="px-3 py-3">
-                      <input
-                        type="number"
-                        value={row.amount || ''}
-                        onChange={(e) => updateRow(row.id, 'amount', e.target.value)}
-                        placeholder="0.00"
-                        className="w-[140px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
-                      />
+                      {isPatientView ? (
+                        <p className="text-sm font-semibold text-slate-800">{formatPeso(row.amount)}</p>
+                      ) : (
+                        <input
+                          type="number"
+                          value={row.amount || ''}
+                          onChange={(e) => updateRow(row.id, 'amount', e.target.value)}
+                          placeholder="0.00"
+                          className="w-[140px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+                        />
+                      )}
                     </td>
 
                     <td className="px-3 py-3">
-                      <select
-                        value={row.status || ''}
-                        onChange={(e) => updateRow(row.id, 'status', e.target.value)}
-                        className="w-[160px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
-                      >
-                        <option value="">Select status</option>
-                        {statusOptions.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
+                      {isPatientView ? (
+                        <p className="text-sm text-slate-700">{displayText(row.status)}</p>
+                      ) : (
+                        <select
+                          value={row.status || ''}
+                          onChange={(e) => updateRow(row.id, 'status', e.target.value)}
+                          className="w-[160px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+                        >
+                          <option value="">Select status</option>
+                          {statusOptions.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </td>
 
                     <td className="px-3 py-3">
-                      <input
-                        type="text"
-                        value={row.remarks || ''}
-                        onChange={(e) => updateRow(row.id, 'remarks', e.target.value)}
-                        placeholder="Remarks"
-                        className="w-[240px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
-                      />
+                      {isPatientView ? (
+                        <p className="text-sm text-slate-700">{displayText(row.remarks)}</p>
+                      ) : (
+                        <input
+                          type="text"
+                          value={row.remarks || ''}
+                          onChange={(e) => updateRow(row.id, 'remarks', e.target.value)}
+                          placeholder="Remarks"
+                          className="w-[240px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+                        />
+                      )}
                     </td>
 
-                    <td className="px-3 py-3">
-                      <button
-                        type="button"
-                        onClick={() => deleteRow(row.id)}
-                        className="rounded-xl bg-red-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-red-600"
-                      >
-                        Delete
-                      </button>
-                    </td>
+                    {!isPatientView && (
+                      <td className="px-3 py-3">
+                        <button
+                          type="button"
+                          onClick={() => deleteRow(row.id)}
+                          className="rounded-xl bg-red-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-red-600"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -318,48 +365,49 @@ export default function BillingPage() {
           </div>
         </section>
 
+        {!isPatientView && (
+          <div className="fixed bottom-6 left-4 right-4 z-40 lg:left-72 lg:right-0">
+            <div className="action-shell">
+              <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white/95 px-6 py-4 shadow-2xl backdrop-blur">
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">Billing Sheet</p>
+                  <p className="text-xs text-slate-500">
+                    {isLoading ? 'Loading records from Firestore...' : 'Save visible rows for the active patient.'}
+                  </p>
+                </div>
 
-        <div className="fixed bottom-6 left-4 right-4 z-40 lg:left-72 lg:right-0">
-          <div className="action-shell">
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white/95 px-6 py-4 shadow-2xl backdrop-blur">
-              <div>
-                <p className="text-sm font-semibold text-slate-800">Billing Sheet</p>
-                <p className="text-xs text-slate-500">
-                  {isLoading ? 'Loading records from Firestore...' : 'Save visible rows for the active patient.'}
-                </p>
-              </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={addRow}
+                    disabled={isLoading || isSaving}
+                    className="rounded-xl bg-cyan-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    + Add Row
+                  </button>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={addRow}
-                  disabled={isLoading || isSaving}
-                  className="rounded-xl bg-cyan-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  + Add Row
-                </button>
+                  <button
+                    type="button"
+                    onClick={clearBilling}
+                    disabled={isLoading || isSaving}
+                    className="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Clear
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={clearBilling}
-                  disabled={isLoading || isSaving}
-                  className="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  Clear
-                </button>
-
-                <button
-                  type="button"
-                  onClick={saveBilling}
-                  disabled={isLoading || isSaving}
-                  className="rounded-xl bg-cyan-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isSaving ? 'Saving...' : 'Save Billing'}
-                </button>
+                  <button
+                    type="button"
+                    onClick={saveBilling}
+                    disabled={isLoading || isSaving}
+                    className="rounded-xl bg-cyan-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSaving ? 'Saving...' : 'Save Billing'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </AppShell>
   );

@@ -1,18 +1,22 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getLocalDateTime } from '@/lib/patientFirestore';
+import { createOrLinkPatientAccount } from '@/lib/patientAccounts';
+import {
+  loadPatientProfile,
+  savePatientProfile,
+} from '@/lib/patientFirestore';
 import { usePatient } from './PatientProvider';
 
 function generatePatientId() {
   const now = new Date();
   const year = now.getFullYear();
   const suffix = String(now.getTime()).slice(-6);
-  return ``;
+  return `NC-${year}-${suffix}`;
 }
 
-const initialForm = () => ({
+const emptyForm = () => ({
   patientId: generatePatientId(),
   status: '',
   caseNo: '',
@@ -35,6 +39,7 @@ const initialForm = () => ({
   religion: '',
   address: '',
   contactNo: '',
+  emailAddress: '',
   emergName: '',
   emergNo: '',
   emergAddress: '',
@@ -48,7 +53,22 @@ const initialForm = () => ({
   prevPreg: '',
   prevDeliv: '',
   pregComp: '',
+  patientUid: '',
+  patientUserId: '',
 });
+
+function normalizeForm(patient = null) {
+  if (!patient) return emptyForm();
+
+  return {
+    ...emptyForm(),
+    ...patient,
+    patientId: patient.patientId || patient.id || '',
+    emailAddress: patient.emailAddress || patient.email || '',
+    patientUid: patient.patientUid || patient.patientUserId || '',
+    patientUserId: patient.patientUserId || patient.patientUid || '',
+  };
+}
 
 function Field({ label, required, children }) {
   return (
@@ -71,13 +91,82 @@ function Section({ title, children }) {
   );
 }
 
-export default function PatientRegistrationForm({ redirectAfterSave = true, compact = false, onSaved }) {
+function formatValue(value) {
+  if (value === null || value === undefined || value === '') return '—';
+  return String(value);
+}
+
+function InfoItem({ label, value, wide = false }) {
+  return (
+    <div className={`rounded-2xl border border-slate-200 bg-slate-50 p-4 ${wide ? 'lg:col-span-2' : ''}`}>
+      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">{label}</p>
+      <p className="mt-1 whitespace-pre-line break-words text-sm font-semibold text-slate-800">
+        {formatValue(value)}
+      </p>
+    </div>
+  );
+}
+
+export function PatientAdmissionInfoView({ patient }) {
+  if (!patient) {
+    return (
+      <section className="section-card p-6">
+        <h2 className="text-lg font-semibold text-slate-900">Admission Information</h2>
+        <p className="mt-2 text-sm text-slate-500">
+          No patient chart is linked to this account yet.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="section-card p-5 lg:p-6">
+      <div className="mb-5">
+        <p className="section-kicker">View Only</p>
+        <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-900">Admission Information</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Patient accounts can only view admission information. Editing is reserved for authorized staff.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5">
+        <InfoItem label="Patient ID" value={patient.patientId || patient.id} />
+        <InfoItem label="Status" value={patient.status} />
+        <InfoItem label="Case No." value={patient.caseNo} />
+        <InfoItem label="Date of Admission" value={patient.dateAdmission} />
+        <InfoItem label="Attending Physician(s)" value={patient.attending} />
+        <InfoItem label="Insurance" value={patient.insurance} />
+        <InfoItem label="Room No." value={patient.roomNo} />
+        <InfoItem label="Ward / Unit" value={patient.ward} />
+        <InfoItem label="Primary / Admitting Diagnosis" value={patient.admittingDx || patient.primaryDiagnosis} wide />
+        <InfoItem label="Chief Complaint" value={patient.chiefComplaint} />
+        <InfoItem label="Mode of Admission" value={patient.modeAdmission} />
+      </div>
+    </section>
+  );
+}
+
+export default function PatientRegistrationForm({
+  patientIdToEdit = '',
+  redirectAfterSave = true,
+  compact = false,
+  onSaved,
+}) {
   const router = useRouter();
-  const { createPatient } = usePatient();
-  const [form, setForm] = useState(() => initialForm());
+  const {
+    createPatient,
+    refreshPatients,
+    refreshActivePatient,
+    selectPatient,
+  } = usePatient();
+  const [form, setForm] = useState(() => emptyForm());
+  const [loadedPatient, setLoadedPatient] = useState(null);
+  const [isLoadingPatient, setIsLoadingPatient] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  const isEditMode = Boolean(patientIdToEdit);
 
   const fullName = useMemo(() => {
     return [form.firstName, form.middleName, form.lastName]
@@ -85,6 +174,54 @@ export default function PatientRegistrationForm({ redirectAfterSave = true, comp
       .filter(Boolean)
       .join(' ');
   }, [form.firstName, form.middleName, form.lastName]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadEditablePatient() {
+      setMessage('');
+      setError('');
+
+      if (!patientIdToEdit) {
+        setLoadedPatient(null);
+        setForm(emptyForm());
+        return;
+      }
+
+      setIsLoadingPatient(true);
+
+      try {
+        const patient = await loadPatientProfile(patientIdToEdit);
+
+        if (!mounted) return;
+
+        if (!patient) {
+          setError('Patient record not found.');
+          setLoadedPatient(null);
+          setForm(emptyForm());
+          return;
+        }
+
+        setLoadedPatient(patient);
+        setForm(normalizeForm(patient));
+      } catch (err) {
+        console.error(err);
+        if (mounted) {
+          setError('Failed to load patient details.');
+        }
+      } finally {
+        if (mounted) {
+          setIsLoadingPatient(false);
+        }
+      }
+    }
+
+    loadEditablePatient();
+
+    return () => {
+      mounted = false;
+    };
+  }, [patientIdToEdit]);
 
   function updateField(name, value) {
     setForm((prev) => ({
@@ -94,7 +231,7 @@ export default function PatientRegistrationForm({ redirectAfterSave = true, comp
   }
 
   function clearForm() {
-    setForm(initialForm());
+    setForm(isEditMode ? normalizeForm(loadedPatient) : emptyForm());
     setMessage('');
     setError('');
   }
@@ -106,29 +243,65 @@ export default function PatientRegistrationForm({ redirectAfterSave = true, comp
 
     try {
       const patientId = String(form.patientId || form.caseNo || generatePatientId()).trim();
+      const emailAddress = String(form.emailAddress || form.email || '').trim().toLowerCase();
 
-      if (!patientId || !form.firstName || !form.lastName) {
-        setError('Please provide Patient ID, First Name, and Family Name.');
+      if (!patientId || !form.firstName || !form.lastName || !emailAddress) {
+        setError('Please provide Patient ID, First Name, Family Name, and Email Address.');
         return;
       }
 
-      const savedPatient = await createPatient({
+      const accountResult = (!form.patientUid && !form.patientUserId)
+        ? await createOrLinkPatientAccount({
+            patientId,
+            email: emailAddress,
+            fullName: fullName || `${form.firstName} ${form.lastName}`,
+          })
+        : null;
+
+      const linkedUid = accountResult?.uid || form.patientUid || form.patientUserId || '';
+      const payload = {
         ...form,
         patientId,
         id: patientId,
+        email: emailAddress,
+        emailAddress,
         fullName: fullName || `${form.firstName} ${form.lastName}`,
         primaryDiagnosis: form.primaryDiagnosis || form.admittingDx,
-      });
+        patientUid: linkedUid,
+        patientUserId: linkedUid,
+        hasPatientPortalAccount: Boolean(linkedUid),
+      };
 
-      setMessage(`${savedPatient.fullName || savedPatient.patientId} registered and selected.`);
+      let savedPatient;
+
+      if (isEditMode) {
+        await savePatientProfile(patientId, payload, { merge: true });
+        await refreshPatients();
+        await refreshActivePatient(patientId);
+        savedPatient = { ...payload, id: patientId };
+        await selectPatient(savedPatient);
+      } else {
+        savedPatient = await createPatient(payload);
+      }
+
+      const accountMessage = accountResult?.created
+        ? `\nPatient account created.\nUsername: ${accountResult.email}\nTemporary password: ${accountResult.temporaryPassword}`
+        : accountResult?.linked
+          ? `\nExisting patient account linked: ${accountResult.email}`
+          : linkedUid
+            ? '\nPatient account is already linked.'
+            : '';
+
+      setMessage(`${savedPatient.fullName || savedPatient.patientId} ${isEditMode ? 'updated' : 'registered and selected'}.${accountMessage}`);
+      setLoadedPatient(savedPatient);
       onSaved?.(savedPatient);
 
-      if (redirectAfterSave) {
+      if (redirectAfterSave && !isEditMode) {
         router.replace('/dashboard');
       }
     } catch (err) {
       console.error(err);
-      setError('Failed to register patient. Please check your Firestore connection.');
+      setError(err?.message || 'Failed to save patient. Please check your Firestore connection.');
     } finally {
       setIsSaving(false);
     }
@@ -138,7 +311,7 @@ export default function PatientRegistrationForm({ redirectAfterSave = true, comp
     <div className="space-y-6 pb-36">
       {(message || error) && (
         <div
-          className={`rounded-2xl border px-5 py-4 text-sm font-medium ${
+          className={`whitespace-pre-line rounded-2xl border px-5 py-4 text-sm font-medium ${
             error
               ? 'border-red-200 bg-red-50 text-red-700'
               : 'border-emerald-200 bg-emerald-50 text-emerald-700'
@@ -148,9 +321,15 @@ export default function PatientRegistrationForm({ redirectAfterSave = true, comp
         </div>
       )}
 
+      {isLoadingPatient && (
+        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm font-medium text-slate-600">
+          Loading patient details...
+        </div>
+      )}
+
       <Section title="Admission Information">
         <Field label="Patient ID" required>
-          <input className="input" value={form.patientId} onChange={(event) => updateField('patientId', event.target.value)} />
+          <input className="input" value={form.patientId} onChange={(event) => updateField('patientId', event.target.value)} disabled={isEditMode} />
         </Field>
 
         <Field label="Status" required>
@@ -201,7 +380,7 @@ export default function PatientRegistrationForm({ redirectAfterSave = true, comp
 
             <Field label="Mode of Admission">
               <select className="input" value={form.modeAdmission} onChange={(event) => updateField('modeAdmission', event.target.value)}>
-                <option value=""></option>
+                <option value="">Select option</option>
                 <option value="Elective">Elective</option>
                 <option value="Emergency">Emergency</option>
                 <option value="Walk-in">Walk-in</option>
@@ -225,9 +404,13 @@ export default function PatientRegistrationForm({ redirectAfterSave = true, comp
           <input className="input" value={form.middleName} onChange={(event) => updateField('middleName', event.target.value)} />
         </Field>
 
+        <Field label="Email Address" required>
+          <input type="email" className="input" value={form.emailAddress || ''} onChange={(event) => updateField('emailAddress', event.target.value)} />
+        </Field>
+
         <Field label="Sex">
           <select className="input" value={form.sex} onChange={(event) => updateField('sex', event.target.value)}>
-            <option value=""></option>
+            <option value="">Select option</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
           </select>
@@ -239,7 +422,7 @@ export default function PatientRegistrationForm({ redirectAfterSave = true, comp
 
         <Field label="Civil Status">
           <select className="input" value={form.civilStatus} onChange={(event) => updateField('civilStatus', event.target.value)}>
-            <option value=""></option>
+            <option value="">Select option</option>
             <option value="Single">Single</option>
             <option value="Married">Married</option>
             <option value="Widowed">Widowed</option>
@@ -345,16 +528,16 @@ export default function PatientRegistrationForm({ redirectAfterSave = true, comp
               disabled={isSaving}
               className="rounded-xl border border-slate-300 bg-white px-5 py-3 font-medium transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Clear
+              {isEditMode ? 'Reset' : 'Clear'}
             </button>
 
             <button
               type="button"
               onClick={savePatient}
-              disabled={isSaving}
+              disabled={isSaving || isLoadingPatient}
               className="rounded-xl bg-cyan-600 px-5 py-3 font-medium text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSaving ? 'Saving...' : 'Save & Select Patient'}
+              {isSaving ? 'Saving...' : isEditMode ? 'Update Patient Details' : 'Save & Select Patient'}
             </button>
           </div>
         </div>

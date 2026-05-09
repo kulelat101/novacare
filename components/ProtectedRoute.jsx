@@ -2,12 +2,16 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { canAccess, getDefaultRoute } from '@/lib/roles';
+import { ROLES, canAccess, getDefaultRoute } from '@/lib/roles';
 import { useAuth } from './AuthProvider';
 import { usePatient } from './PatientProvider';
 
-const PATIENT_OPTION_PATHS = new Set([
+const STAFF_PATIENT_OPTION_PATHS = new Set([
   '/patients/select',
+  '/admission/registration',
+]);
+
+const PATIENT_OPTION_PATHS = new Set([
   '/admission/registration',
 ]);
 
@@ -26,12 +30,18 @@ export default function ProtectedRoute({ children }) {
     }
 
     const role = profile?.role;
+
     if (role && !canAccess(role, pathname)) {
       router.replace(getDefaultRoute(role));
       return;
     }
 
-    if (!activePatientId && !PATIENT_OPTION_PATHS.has(pathname)) {
+    if (!activePatientId && role === ROLES.PATIENT && !PATIENT_OPTION_PATHS.has(pathname)) {
+      router.replace('/admission/registration');
+      return;
+    }
+
+    if (!activePatientId && role !== ROLES.PATIENT && !STAFF_PATIENT_OPTION_PATHS.has(pathname)) {
       router.replace('/patients/select');
     }
   }, [loading, loadingPatients, user, profile, pathname, router, activePatientId]);

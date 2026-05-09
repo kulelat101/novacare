@@ -19,6 +19,8 @@ const DEMO_PATIENT = {
   middleName: '',
   lastName: 'Dela Cruz',
   fullName: 'Juan Dela Cruz',
+  emailAddress: 'juan.delacruz@example.com',
+  email: 'juan.delacruz@example.com',
   sex: 'Male',
   age: '32',
   status: 'Admitted',
@@ -55,6 +57,8 @@ export default function PatientSelectPage() {
         getPatientRoomWard(patient),
         getPatientDiagnosis(patient),
         patient.status,
+        patient.emailAddress,
+        patient.email,
       ]
         .join(' ')
         .toLowerCase();
@@ -66,6 +70,12 @@ export default function PatientSelectPage() {
   async function handleSelectPatient(patient) {
     await selectPatient(patient);
     router.replace('/dashboard');
+  }
+
+  async function handleEditPatient(patient) {
+    const patientId = patient.patientId || patient.id;
+    await selectPatient(patient);
+    router.push(`/admission/registration?patientId=${encodeURIComponent(patientId)}`);
   }
 
   async function handleUseDemoPatient() {
@@ -104,7 +114,7 @@ export default function PatientSelectPage() {
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search by patient name, ID, room, diagnosis..."
+                placeholder="Search by patient name, ID, room, diagnosis, email..."
                 className="input"
               />
             </div>
@@ -113,7 +123,7 @@ export default function PatientSelectPage() {
               <button type="button" onClick={refreshPatients} className="btn-secondary">
                 Refresh
               </button>
-              
+
               <Link href="/admission/registration" className="btn-primary text-center">
                 + Register Patient
               </Link>
@@ -149,10 +159,13 @@ export default function PatientSelectPage() {
                 const active = patientId === activePatientId;
 
                 return (
-                  <div key={patientId} className="grid gap-4 px-6 py-5 lg:grid-cols-[1.2fr,1fr,1fr,auto] lg:items-center">
+                  <div key={patientId} className="grid gap-4 px-6 py-5 xl:grid-cols-[1.2fr,1fr,1fr,auto] xl:items-center">
                     <div>
                       <p className="text-lg font-bold text-slate-900">{formatPatientName(patient)}</p>
                       <p className="mt-1 text-sm text-slate-500">Patient ID: {patientId}</p>
+                      {(patient.emailAddress || patient.email) && (
+                        <p className="mt-1 text-xs text-slate-400">Email: {patient.emailAddress || patient.email}</p>
+                      )}
                     </div>
 
                     <div>
@@ -165,13 +178,23 @@ export default function PatientSelectPage() {
                       <p className="mt-1 text-sm font-semibold text-slate-800">{getPatientDiagnosis(patient)}</p>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleSelectPatient(patient)}
-                      className={active ? 'btn-secondary' : 'btn-primary'}
-                    >
-                      {active ? 'Selected' : 'Select Patient'}
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleSelectPatient(patient)}
+                        className={active ? 'btn-secondary' : 'btn-primary'}
+                      >
+                        {active ? 'Selected' : 'Select Patient'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleEditPatient(patient)}
+                        className="btn-secondary"
+                      >
+                        Edit Details
+                      </button>
+                    </div>
                   </div>
                 );
               })}

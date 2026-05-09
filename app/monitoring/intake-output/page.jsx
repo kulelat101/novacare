@@ -37,9 +37,9 @@ const intakeFields = dedupeFields([
 
 const outputFields = dedupeFields([
   { key: 'urine', label: 'URINE', inputType: 'number' },
-  { key: 'bm', label: 'BM', inputType: 'text', placeholder: 'e.g. 1x, soft, none' },
+  { key: 'bm', label: 'BM', inputType: 'text', placeholder: '' },
   { key: 'drainageTubes', label: 'DRAINAGE TUBES', inputType: 'number' },
-  { key: 'vomitus', label: 'VOMITUS', inputType: 'text', placeholder: 'e.g. none, 1 episode' },
+  { key: 'vomitus', label: 'VOMITUS', inputType: 'text', placeholder: '' },
   { key: 'bloodLoss', label: 'BLOOD LOSS', inputType: 'number' },
   { key: 'outputOthers', label: 'OTHERS', inputType: 'number' },
 ]);
