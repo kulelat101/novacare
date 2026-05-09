@@ -646,7 +646,7 @@ export default function LaboratoryPage() {
         <SavedRecordsPanel
           collectionName="laboratoryResults"
           title="Saved Laboratory Reports"
-          description="View CBC, coagulation, blood typing, urinalysis, fecalysis, chemistry, immunology, and clinical microscopy reports for this patient. Click a saved report to load it into the form."
+          description=""
           sortBy="reportDate"
           sortDirection="desc"
           refreshKey={refreshKey}
