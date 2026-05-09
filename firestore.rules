@@ -22,11 +22,14 @@ service cloud.firestore {
     }
 
     function isStaff() {
-      return signedIn() && userRole() in ['admin', 'staff', 'nurse', 'doctor'];
+      return signedIn() && userRole() in [
+        'admin', 'staff', 'nurse', 'doctor',
+        'Admin', 'Staff', 'Nurse', 'Doctor'
+      ];
     }
 
     function isPatient() {
-      return signedIn() && userRole() == 'patient';
+      return signedIn() && userRole() in ['patient', 'Patient'];
     }
 
     function matchesLinkedPatientId(value) {
@@ -98,6 +101,16 @@ service cloud.firestore {
       );
     }
 
+    function patientCanReadPortalCollection(collectionId, data) {
+      return collectionId in [
+        'billingItems',
+        'dischargeSummaries',
+        'laboratoryResults',
+        'imagingResults',
+        'imagingReports'
+      ] && ownsRecordData(data);
+    }
+
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isStaff());
       allow create, update: if signedIn() && (request.auth.uid == userId || isStaff());
@@ -114,14 +127,12 @@ service cloud.firestore {
       allow update: if ownsPatientPath(patientDocId);
 
       match /{subCollection}/{recordId} {
-        allow read: if isStaff() || ownsPatientPath(patientDocId) || ownsRecordData(resource.data);
+        allow read: if isStaff() || ownsPatientPath(patientDocId) || patientCanReadPortalCollection(subCollection, resource.data);
         allow create, update, delete: if isStaff();
       }
     }
 
-    // These collection-group rules support legacy records that may have been
-    // saved under a different patient document path, as long as the record
-    // itself contains patientId / visiblePatientId / patientDocId / chartId.
+    // Collection-group support for legacy records saved under mixed patient IDs.
     match /{path=**}/billingItems/{recordId} {
       allow read: if isStaff() || ownsRecordData(resource.data);
       allow create, update, delete: if isStaff();
@@ -137,14 +148,53 @@ service cloud.firestore {
       allow create, update, delete: if isStaff();
     }
 
+    match /{path=**}/imagingResults/{recordId} {
+      allow read: if isStaff() || ownsRecordData(resource.data);
+      allow create, update, delete: if isStaff();
+    }
+
     match /{path=**}/imagingReports/{recordId} {
       allow read: if isStaff() || ownsRecordData(resource.data);
       allow create, update, delete: if isStaff();
     }
 
+    // Staff-only clinical collection-group reads used by SavedRecordsPanel fallbacks.
+    match /{path=**}/healthAssessments/{recordId} {
+      allow read, create, update, delete: if isStaff();
+    }
+
+    match /{path=**}/nursesNotes/{recordId} {
+      allow read, create, update, delete: if isStaff();
+    }
+
+    match /{path=**}/dailyChecklists/{recordId} {
+      allow read, create, update, delete: if isStaff();
+    }
+
+    match /{path=**}/vitalSigns/{recordId} {
+      allow read, create, update, delete: if isStaff();
+    }
+
+    match /{path=**}/intakeOutput/{recordId} {
+      allow read, create, update, delete: if isStaff();
+    }
+
+    match /{path=**}/ivSheet/{recordId} {
+      allow read, create, update, delete: if isStaff();
+    }
+
+    match /{path=**}/doctorOrders/{recordId} {
+      allow read, create, update, delete: if isStaff();
+    }
+
+    match /{path=**}/medicationRecords/{recordId} {
+      allow read, create, update, delete: if isStaff();
+    }
+
     match /loginLogs/{logId} {
       allow read: if isStaff();
-      allow create, update: if signedIn();
+      allow create: if signedIn();
+      allow update: if signedIn() && resource.data.userId == request.auth.uid;
       allow delete: if isStaff();
     }
   }

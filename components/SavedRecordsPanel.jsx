@@ -7,6 +7,7 @@ import {
   loadPatientRows,
 } from '@/lib/patientFirestore';
 import { usePatient } from './PatientProvider';
+import { useAuth } from './AuthProvider';
 
 const HIDDEN_KEYS = new Set([
   'id',
@@ -205,6 +206,7 @@ export default function SavedRecordsPanel({
   onRecordSelect,
 }) {
   const { activePatientId } = usePatient();
+  const { profile } = useAuth();
   const [records, setRecords] = useState([]);
   const [selectedId, setSelectedId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -235,9 +237,10 @@ export default function SavedRecordsPanel({
       });
     } catch (err) {
       console.error(err);
+      const role = String(profile?.role || 'this user').toLowerCase();
       setError(
         err?.code === 'permission-denied'
-          ? 'Firestore rules are blocking this patient from reading these saved records. Update Firestore rules to allow linked patient accounts to read their own patient subcollections.'
+          ? `Firestore rules are blocking ${role} from reading these saved records. Publish the updated Firestore rules so staff can read patient subcollections and patients can read their own linked records.`
           : 'Failed to load saved records from Firestore.'
       );
       setRecords([]);

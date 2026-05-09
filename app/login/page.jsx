@@ -7,6 +7,7 @@ import { sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/aut
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { createLoginLog } from '@/lib/audit';
+import { getDefaultRoute } from '@/lib/roles';
 
 function normalizeEmail(value) {
   return String(value || '').trim().toLowerCase();
@@ -33,14 +34,14 @@ export default function LoginPage() {
       const credential = await signInWithEmailAndPassword(auth, normalizeEmail(email), password);
       const profileSnap = await getDoc(doc(db, 'users', credential.user.uid));
       const profile = profileSnap.exists() ? profileSnap.data() : { role: 'nurse', fullName: 'Nurse' };
-      await createLoginLog(credential.user, profile.role, profile.fullName);
+      await createLoginLog(credential.user, profile);
 
       if (profile?.mustChangePassword) {
         router.replace('/change-password');
         return;
       }
 
-      router.replace('/patients/select');
+      router.replace(getDefaultRoute(profile?.role));
     } catch (err) {
       setError('Unable to login. Check your Firebase account credentials.');
     } finally {
@@ -62,7 +63,7 @@ export default function LoginPage() {
       }
 
       await sendPasswordResetEmail(auth, targetEmail, {
-        url: `${window.location.origin}/login`,
+        url: `${window.location.origin}/reset-password`,
         handleCodeInApp: false,
       });
       setResetMessage(
