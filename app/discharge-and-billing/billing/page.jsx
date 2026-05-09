@@ -173,8 +173,8 @@ export default function BillingPage() {
   };
 
   const headers = isPatientView
-    ? ['Category', 'Description', 'Amount (₱)', 'Status', 'Breakdown']
-    : ['Category', 'Description', 'Amount (₱)', 'Status', 'Breakdown', 'Actions'];
+    ? ['Category', 'Amount (₱)', 'Status', 'Breakdown']
+    : ['Category', 'Amount (₱)', 'Status', 'Breakdown', 'Actions'];
 
   return (
     <AppShell title="Billing" subtitle={isPatientView ? 'View billing statement' : 'Patient billing items and payment status'}>
@@ -285,20 +285,6 @@ export default function BillingPage() {
                             </option>
                           ))}
                         </select>
-                      )}
-                    </td>
-
-                    <td className="px-3 py-3">
-                      {isPatientView ? (
-                        <p className="text-sm text-slate-700">{displayText(row.description)}</p>
-                      ) : (
-                        <input
-                          type="text"
-                          value={row.description || ''}
-                          onChange={(e) => updateRow(row.id, 'description', e.target.value)}
-                          placeholder=""
-                          className="w-[280px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
-                        />
                       )}
                     </td>
 
