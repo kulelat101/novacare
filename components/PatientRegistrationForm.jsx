@@ -9,14 +9,14 @@ function generatePatientId() {
   const now = new Date();
   const year = now.getFullYear();
   const suffix = String(now.getTime()).slice(-6);
-  return `NC-${year}-${suffix}`;
+  return ``;
 }
 
 const initialForm = () => ({
   patientId: generatePatientId(),
-  status: 'Admitted',
+  status: '',
   caseNo: '',
-  dateAdmission: getLocalDateTime(),
+  dateAdmission: '',
   attending: '',
   insurance: '',
   roomNo: '',
