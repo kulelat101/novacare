@@ -106,20 +106,20 @@ const fields = [
     label: 'HEAD',
     type: 'assessment-table',
     rows: [
-      { key: 'hair', label: 'HAIR', defaultChecked: normalChecked, defaultNote: 'Clean, no lice, and no bald spots' },
-      { key: 'perrla', label: 'PERRLA', defaultChecked: normalChecked, defaultNote: 'Pupils are equal, clear, and reactive to light; no redness' },
-      { key: 'nose', label: 'NOSE', defaultChecked: normalChecked, defaultNote: 'No blockage and bleeding' },
-      { key: 'ears', label: 'EARS', defaultChecked: normalChecked, defaultNote: 'Equal on both sides; no discharge' },
+      { key: 'hair', label: 'HAIR', defaultChecked: normalChecked, defaultNote: '' },
+      { key: 'perrla', label: 'PERRLA', defaultChecked: normalChecked, defaultNote: '' },
+      { key: 'nose', label: 'NOSE', defaultChecked: normalChecked, defaultNote: '' },
+      { key: 'ears', label: 'EARS', defaultChecked: normalChecked, defaultNote: '' },
       {
         key: 'mouth',
         label: 'MOUTH',
         defaultChecked: normalChecked,
-        defaultNote: 'Pink and moist; no sores',
+        defaultNote: '',
         children: [
-          { key: 'mouthMidlineTongue', label: 'MIDLINE TONGUE', defaultChecked: normalChecked, defaultNote: 'Centered, no deviation observed' },
-          { key: 'mouthMoist', label: 'MOIST', defaultChecked: normalChecked, defaultNote: 'Wet and shiny' },
-          { key: 'mouthLesions', label: 'LESIONS', defaultChecked: normalChecked, defaultNote: 'No lesions inspected' },
-          { key: 'mouthDentition', label: 'DENTITION', defaultChecked: normalChecked, defaultNote: 'Teeth intact, no missing teeth' },
+          { key: 'mouthMidlineTongue', label: 'MIDLINE TONGUE', defaultChecked: normalChecked, defaultNote: '' },
+          { key: 'mouthMoist', label: 'MOIST', defaultChecked: normalChecked, defaultNote: '' },
+          { key: 'mouthLesions', label: 'LESIONS', defaultChecked: normalChecked, defaultNote: '' },
+          { key: 'mouthDentition', label: 'DENTITION', defaultChecked: normalChecked, defaultNote: '' },
         ],
       },
     ],
@@ -132,14 +132,14 @@ const fields = [
     label: 'NECK',
     type: 'assessment-table',
     rows: [
-      { key: 'carotidPulse', label: 'CAROTID PULSE', defaultChecked: normalChecked, defaultNote: 'Normal rhythm and equal bilaterally' },
+      { key: 'carotidPulse', label: 'CAROTID PULSE', defaultChecked: normalChecked, defaultNote: '' },
       {
         key: 'neckFinding',
         label: 'FINDINGS',
         hideCheckbox: true,
         noteType: 'select',
         noteOptions: ['JVD +', 'TRACHEA MIDLINE'],
-        placeholder: 'Select finding',
+        placeholder: '',
       },
     ],
   },
@@ -151,20 +151,20 @@ const fields = [
     label: 'CHEST',
     type: 'assessment-table',
     rows: [
-      { key: 'apicalPulse', label: 'APICAL PULSE', defaultChecked: normalChecked, defaultNote: 'Regular and within normal range' },
+      { key: 'apicalPulse', label: 'APICAL PULSE', defaultChecked: normalChecked, defaultNote: '' },
       {
         key: 'chestFinding',
         label: 'FINDING',
         hideCheckbox: true,
         noteType: 'select',
         noteOptions: ['MUFFLED', 'ARRHYTHMIA'],
-        placeholder: 'Select finding',
+        placeholder: '',
       },
-      { key: 'breathSoundsAnterior', label: 'BREATH SOUNDS - ANTERIOR', defaultChecked: normalChecked, defaultNote: 'Clear' },
-      { key: 'breathSoundsPosterior', label: 'POSTERIOR', defaultChecked: normalChecked, defaultNote: 'Clear' },
-      { key: 'breathSoundsLateral', label: 'LATERAL', defaultChecked: normalChecked, defaultNote: 'Clear' },
-      { key: 'chestSymmetry', label: 'CHEST SYMMETRY', defaultChecked: normalChecked, defaultNote: 'Symmetric, equal rise, and fall' },
-      { key: 'skinTurgorClavicle', label: 'SKIN TURGOR (CLAVICLE)', defaultChecked: normalChecked, defaultNote: 'Good and elastic' },
+      { key: 'breathSoundsAnterior', label: 'BREATH SOUNDS - ANTERIOR', defaultChecked: normalChecked, defaultNote: '' },
+      { key: 'breathSoundsPosterior', label: 'POSTERIOR', defaultChecked: normalChecked, defaultNote: '' },
+      { key: 'breathSoundsLateral', label: 'LATERAL', defaultChecked: normalChecked, defaultNote: '' },
+      { key: 'chestSymmetry', label: 'CHEST SYMMETRY', defaultChecked: normalChecked, defaultNote: '' },
+      { key: 'skinTurgorClavicle', label: 'SKIN TURGOR (CLAVICLE)', defaultChecked: normalChecked, defaultNote: '' },
     ],
   },
 
@@ -175,12 +175,12 @@ const fields = [
     label: 'ABDOMEN',
     type: 'assessment-table',
     rows: [
-      { key: 'inspection', label: 'INSPECTION', defaultChecked: normalChecked, defaultNote: 'No abnormalities observed' },
+      { key: 'inspection', label: 'INSPECTION', defaultChecked: normalChecked, defaultNote: '' },
       {
         key: 'auscultation',
         label: 'AUSCULTATION',
         defaultChecked: normalChecked,
-        defaultNote: 'No abnormal sounds',
+        defaultNote: '',
         extraSelects: [
           { key: 'luq', label: 'LUQ', options: bowelSoundOptions },
           { key: 'ruq', label: 'RUQ', options: bowelSoundOptions },
@@ -188,7 +188,7 @@ const fields = [
           { key: 'rlq', label: 'RLQ', options: bowelSoundOptions },
         ],
       },
-      { key: 'palpation', label: 'PALPATION', defaultChecked: normalChecked, defaultNote: 'No masses palpated' },
+      { key: 'palpation', label: 'PALPATION', defaultChecked: normalChecked, defaultNote: '' },
     ],
   },
 
@@ -206,11 +206,11 @@ const fields = [
         defaultNote: '',
         placeholder: 'e.g. Equal, +2',
         extraCheckboxes: [
-          { key: 'other', label: 'OTHER', hasText: true, placeholder: 'Specify other finding' },
+          { key: 'other', label: 'OTHER', hasText: true, placeholder: '' },
         ],
       },
-      { key: 'tempVsTrunk', label: 'TEMP VS. TRUNK (WARM / COOL)', defaultChecked: normalChecked, defaultNote: 'Warm, same as trunk' },
-      { key: 'gripEqualStrong', label: 'GRIP EQUAL AND STRONG', defaultChecked: normalChecked, defaultNote: 'Strength is equal and strong' },
+      { key: 'tempVsTrunk', label: 'TEMP VS. TRUNK (WARM / COOL)', defaultChecked: normalChecked, defaultNote: '' },
+      { key: 'gripEqualStrong', label: 'GRIP EQUAL AND STRONG', defaultChecked: normalChecked, defaultNote: '' },
       { key: 'capillaryRefill', label: 'CAPILLARY REFILL <3 SEC', defaultChecked: normalChecked, hasNote: false },
       { key: 'veinFillingRapid', label: 'VEIN FILLING RAPID', defaultChecked: normalChecked, defaultNote: 'Rapid' },
     ],
@@ -225,14 +225,14 @@ const fields = [
     rows: [
       { key: 'hairPresent', label: 'HAIR PRESENT', defaultChecked: normalChecked, hasNote: false },
       { key: 'edema', label: 'EDEMA', defaultChecked: normalChecked, defaultNote: 'No edema noted' },
-      { key: 'footStrength', label: 'FOOT STRENGTH', defaultChecked: normalChecked, defaultNote: 'Strength is equal and strong' },
+      { key: 'footStrength', label: 'FOOT STRENGTH', defaultChecked: normalChecked, defaultNote: '' },
       {
         key: 'homans',
         label: 'HOMAN’S',
         hideCheckbox: true,
         noteType: 'select',
         noteOptions: positiveNegativeOptions,
-        placeholder: 'Select',
+        placeholder: '',
       },
       {
         key: 'claudication',
@@ -240,7 +240,7 @@ const fields = [
         hideCheckbox: true,
         noteType: 'select',
         noteOptions: positiveNegativeOptions,
-        placeholder: 'Select',
+        placeholder: '',
       },
       {
         key: 'nails',
@@ -253,7 +253,7 @@ const fields = [
           { key: 'ingrown', label: 'INGROWN' },
         ],
       },
-      { key: 'pedalPulse', label: 'PEDAL PULSE', defaultChecked: normalChecked, defaultNote: 'Palpable and equal' },
+      { key: 'pedalPulse', label: 'PEDAL PULSE', defaultChecked: normalChecked, defaultNote: '' },
     ],
   },
 
@@ -265,10 +265,10 @@ const fields = [
     type: 'assessment-table',
     fullWidth: false,
     rows: [
-      { key: 'upperRight', label: 'UPPER R', defaultChecked: normalChecked, defaultNote: 'Full ROM, moves freely' },
-      { key: 'upperLeft', label: 'UPPER L', defaultChecked: normalChecked, defaultNote: 'Full ROM, moves freely' },
-      { key: 'lowerRight', label: 'LOWER R', defaultChecked: normalChecked, defaultNote: 'Full ROM, moves freely' },
-      { key: 'lowerLeft', label: 'LOWER L', defaultChecked: normalChecked, defaultNote: 'Full ROM, moves freely' },
+      { key: 'upperRight', label: 'UPPER R', defaultChecked: normalChecked, defaultNote: '' },
+      { key: 'upperLeft', label: 'UPPER L', defaultChecked: normalChecked, defaultNote: '' },
+      { key: 'lowerRight', label: 'LOWER R', defaultChecked: normalChecked, defaultNote: '' },
+      { key: 'lowerLeft', label: 'LOWER L', defaultChecked: normalChecked, defaultNote: '' },
     ],
   },
   {
@@ -278,10 +278,10 @@ const fields = [
     type: 'assessment-table',
     fullWidth: false,
     rows: [
-      { key: 'upperRight', label: 'UPPER R', defaultChecked: normalChecked, defaultNote: 'Strong and equal bilaterally' },
-      { key: 'upperLeft', label: 'UPPER L', defaultChecked: normalChecked, defaultNote: 'Strong and equal bilaterally' },
-      { key: 'lowerRight', label: 'LOWER R', defaultChecked: normalChecked, defaultNote: 'Strong and equal bilaterally' },
-      { key: 'lowerLeft', label: 'LOWER L', defaultChecked: normalChecked, defaultNote: 'Strong and equal bilaterally' },
+      { key: 'upperRight', label: 'UPPER R', defaultChecked: normalChecked, defaultNote: '' },
+      { key: 'upperLeft', label: 'UPPER L', defaultChecked: normalChecked, defaultNote: '' },
+      { key: 'lowerRight', label: 'LOWER R', defaultChecked: normalChecked, defaultNote: '' },
+      { key: 'lowerLeft', label: 'LOWER L', defaultChecked: normalChecked, defaultNote: '' },
     ],
   },
   {
@@ -290,7 +290,7 @@ const fields = [
     label: 'SENSATION',
     type: 'assessment-table',
     rows: [
-      { key: 'sensation', label: 'SENSATION', defaultChecked: normalChecked, defaultNote: 'Intact and equal' },
+      { key: 'sensation', label: 'SENSATION', defaultChecked: normalChecked, defaultNote: '' },
     ],
   },
 
@@ -301,8 +301,8 @@ const fields = [
     label: 'GENERAL ASSESSMENT',
     type: 'assessment-table',
     rows: [
-      { key: 'weightHeight', label: 'WEIGHT/HEIGHT', defaultChecked: normalChecked, defaultNote: '', placeholder: 'e.g. 85 kg / 157 cm' },
-      { key: 'bmi', label: 'BMI', defaultChecked: normalChecked, defaultNote: '', placeholder: 'e.g. 34.5 - Obesity' },
+      { key: 'weightHeight', label: 'WEIGHT/HEIGHT', defaultChecked: normalChecked, defaultNote: '', placeholder: '' },
+      { key: 'bmi', label: 'BMI', defaultChecked: normalChecked, defaultNote: '', placeholder: '' },
     ],
   },
 
@@ -312,7 +312,7 @@ const fields = [
     name: 'skinAssessment',
     label: 'Skin Assessment',
     type: 'textarea',
-    placeholder: 'Enter skin assessment findings...',
+    placeholder: '',
   },
 
   // Pain Assessment
