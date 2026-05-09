@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userRole() {
+      return signedIn() && userDoc().data.role;
+    }
+
+    function isStaff() {
+      return signedIn() && userRole() in ['admin', 'staff', 'nurse', 'doctor'];
+    }
+
+    function isPatient() {
+      return signedIn() && userRole() == 'patient';
+    }
+
+    function isLinkedPatientPath(patientDocId) {
+      return isPatient() && (
+        userDoc().data.linkedPatientId == patientDocId ||
+        userDoc().data.patientId == patientDocId ||
+        get(/databases/$(database)/documents/patients/$(patientDocId)).data.patientUid == request.auth.uid ||
+        get(/databases/$(database)/documents/patients/$(patientDocId)).data.patientUserId == request.auth.uid ||
+        get(/databases/$(database)/documents/patients/$(patientDocId)).data.patientId == userDoc().data.linkedPatientId ||
+        get(/databases/$(database)/documents/patients/$(patientDocId)).data.patientId == userDoc().data.patientId
+      );
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isStaff());
+      allow create, update: if isStaff() || request.auth.uid == userId;
+    }
+
+    match /patients/{patientDocId} {
+      allow read: if isStaff() || isLinkedPatientPath(patientDocId);
+      allow create, update, delete: if isStaff();
+
+      // Patient self-edit should be handled by your UI, but this rule allows
+      // the linked patient to save their own patient document when needed.
+      // For stricter production rules, limit request.resource.data.diff(...).affectedKeys().
+      allow update: if isLinkedPatientPath(patientDocId);
+
+      match /{subCollection}/{recordId} {
+        allow read: if isStaff() || isLinkedPatientPath(patientDocId);
+        allow create, update, delete: if isStaff();
+      }
+    }
+
+    match /loginLogs/{logId} {
+      allow read, write: if isStaff();
+      allow create, update: if signedIn();
+    }
+  }
+}

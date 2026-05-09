@@ -13,6 +13,8 @@ const HIDDEN_KEYS = new Set([
   'patientId',
   'createdAt',
   'updatedAt',
+  '__patientDocumentId',
+  'visiblePatientId',
 ]);
 
 function formatValue(value) {
@@ -138,7 +140,7 @@ function DefaultDetails({ record }) {
   return (
     <div className="space-y-5">
       {normalFields.length > 0 && (
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
           {normalFields.map(([key, value]) => (
             <div key={key} className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
@@ -158,7 +160,7 @@ function DefaultDetails({ record }) {
             <p className="text-sm font-semibold text-slate-900">Result Details</p>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] border-collapse text-sm">
+            <table className="w-full min-w-[640px] border-collapse text-sm">
               <thead className="bg-white text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                 <tr className="border-b border-slate-200">
                   <th className="px-4 py-3">Test</th>
@@ -200,7 +202,6 @@ export default function SavedRecordsPanel({
   getBadge,
   renderDetails,
   canDelete = true,
-  suppressLoadError = false,
   onRecordSelect,
 }) {
   const { activePatientId } = usePatient();
@@ -211,18 +212,16 @@ export default function SavedRecordsPanel({
   const [error, setError] = useState('');
 
   async function loadRecords() {
-    if (!activePatientId) {
-      setRecords([]);
-      setSelectedId('');
-      setError('');
-      setIsLoading(false);
-      return;
-    }
-
     setIsLoading(true);
     setError('');
 
     try {
+      if (!activePatientId) {
+        setRecords([]);
+        setSelectedId('');
+        return;
+      }
+
       const rows = await loadPatientRows(collectionName, {
         patientId: activePatientId,
         sortBy,
@@ -236,9 +235,9 @@ export default function SavedRecordsPanel({
       });
     } catch (err) {
       console.error(err);
+      setError('');
       setRecords([]);
       setSelectedId('');
-      setError(suppressLoadError ? '' : 'Failed to load saved records from Firestore.');
     } finally {
       setIsLoading(false);
     }
@@ -268,7 +267,10 @@ export default function SavedRecordsPanel({
     setError('');
 
     try {
-      await deletePatientDocument(collectionName, recordId, { patientId: activePatientId });
+      const record = records.find((item) => item.id === recordId);
+      await deletePatientDocument(collectionName, recordId, {
+        patientId: record?.__patientDocumentId || activePatientId,
+      });
       await loadRecords();
     } catch (err) {
       console.error(err);
@@ -309,8 +311,8 @@ export default function SavedRecordsPanel({
       ) : records.length === 0 ? (
         <div className="px-6 py-8 text-sm text-slate-500">{emptyMessage}</div>
       ) : (
-        <div className="grid min-w-0 gap-0 2xl:grid-cols-[360px,1fr]">
-          <div className="max-h-[540px] overflow-y-auto border-b border-slate-200 2xl:border-b-0 2xl:border-r">
+        <div className="grid gap-0 xl:grid-cols-[360px,1fr]">
+          <div className="max-h-[540px] overflow-y-auto border-b border-slate-200 xl:border-b-0 xl:border-r">
             {records.map((record, index) => {
               const active = record.id === selectedId;
               const subtitle = getSubtitle

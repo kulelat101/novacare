@@ -7,6 +7,7 @@ import {
   sendPatientPasswordResetEmail,
 } from '@/lib/patientAccounts';
 import {
+  getPatientDocumentId,
   loadPatientProfile,
   savePatientProfile,
 } from '@/lib/patientFirestore';
@@ -181,6 +182,7 @@ export default function PatientRegistrationForm({
       || form.patientUserId
       || loadedPatient?.patientUid
       || loadedPatient?.patientUserId
+      || form.hasPatientPortalAccount
       || loadedPatient?.hasPatientPortalAccount
   );
 
@@ -396,13 +398,19 @@ export default function PatientRegistrationForm({
           fullName: fullName || `${form.firstName} ${form.lastName}`,
         };
 
-        await savePatientProfile(patientId, selfUpdatePayload, { merge: true });
-        const refreshedPatient = await refreshActivePatient(patientId);
+        const documentId = getPatientDocumentId(loadedPatient) || patientId;
+        const visiblePatientId = loadedPatient?.patientId || patientId;
+
+        await savePatientProfile(documentId, {
+          ...selfUpdatePayload,
+          patientId: visiblePatientId,
+        }, { merge: true });
+        const refreshedPatient = await refreshActivePatient(documentId);
         const savedPatient = refreshedPatient || {
           ...(loadedPatient || {}),
           ...selfUpdatePayload,
-          id: patientId,
-          patientId,
+          id: documentId,
+          patientId: visiblePatientId,
         };
 
         setLoadedPatient(savedPatient);
@@ -417,15 +425,24 @@ export default function PatientRegistrationForm({
         return;
       }
 
-      const accountResult = (!form.patientUid && !form.patientUserId)
-        ? await createOrLinkPatientAccount({
+      let accountResult = null;
+      let accountWarning = '';
+      const shouldCreateOrLinkAccount = !isEditMode && !hasLinkedPatientAccount;
+
+      if (shouldCreateOrLinkAccount) {
+        try {
+          accountResult = await createOrLinkPatientAccount({
             patientId,
             email: emailAddress,
             fullName: fullName || `${form.firstName} ${form.lastName}`,
-          })
-        : null;
+          });
+        } catch (accountErr) {
+          console.error(accountErr);
+          accountWarning = `\nPatient details were saved, but the patient portal account could not be created/linked: ${accountErr?.message || 'Missing permissions.'}`;
+        }
+      }
 
-      const linkedUid = accountResult?.uid || form.patientUid || form.patientUserId || '';
+      const linkedUid = accountResult?.uid || form.patientUid || form.patientUserId || loadedPatient?.patientUid || loadedPatient?.patientUserId || '';
       const payload = {
         ...form,
         patientId,
@@ -436,16 +453,18 @@ export default function PatientRegistrationForm({
         primaryDiagnosis: form.primaryDiagnosis || form.admittingDx,
         patientUid: linkedUid,
         patientUserId: linkedUid,
-        hasPatientPortalAccount: Boolean(linkedUid),
+        hasPatientPortalAccount: Boolean(linkedUid || form.hasPatientPortalAccount || loadedPatient?.hasPatientPortalAccount),
       };
 
       let savedPatient;
 
       if (isEditMode) {
-        await savePatientProfile(patientId, payload, { merge: true });
+        const documentId = getPatientDocumentId(loadedPatient) || patientIdToEdit || patientId;
+
+        await savePatientProfile(documentId, payload, { merge: true });
         await refreshPatients();
-        await refreshActivePatient(patientId);
-        savedPatient = { ...payload, id: patientId };
+        await refreshActivePatient(documentId);
+        savedPatient = { ...payload, id: documentId, patientId };
         await selectPatient(savedPatient);
       } else {
         savedPatient = await createPatient(payload);
@@ -468,7 +487,7 @@ export default function PatientRegistrationForm({
             ? '\nPatient account is already linked.'
             : '';
 
-      setMessage(`${savedPatient.fullName || savedPatient.patientId} ${isEditMode ? 'updated' : 'registered and selected'}.${accountMessage}`);
+      setMessage(`${savedPatient.fullName || savedPatient.patientId} ${isEditMode ? 'updated' : 'registered and selected'}.${accountMessage}${accountWarning}`);
       setLoadedPatient(savedPatient);
       onSaved?.(savedPatient);
 
