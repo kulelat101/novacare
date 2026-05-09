@@ -61,9 +61,12 @@ export default function LoginPage() {
         throw new Error('Please enter your email address.');
       }
 
-      await sendPasswordResetEmail(auth, targetEmail);
+      await sendPasswordResetEmail(auth, targetEmail, {
+        url: `${window.location.origin}/login`,
+        handleCodeInApp: false,
+      });
       setResetMessage(
-        'Password help email sent. Please check the inbox for the secure reset instructions, then log in using the new password.'
+        'Password reset email sent. Open the link in the email, set a new password, then log in again.'
       );
     } catch (err) {
       if (err?.message === 'Please enter your email address.') {
@@ -180,7 +183,7 @@ export default function LoginPage() {
               <div>
                 <h2 className="text-xl font-bold text-slate-900">Forgot Password</h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Enter the account email address. NovaCare will send secure password reset instructions to that email.
+                  Enter the account email address. NovaCare will email a secure password reset link to that account.
                 </p>
               </div>
               <button
@@ -225,7 +228,7 @@ export default function LoginPage() {
                 disabled={resetLoading}
                 className="w-full rounded-xl bg-cyan-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {resetLoading ? 'Sending...' : 'Email Password Help'}
+                {resetLoading ? 'Sending...' : 'Send Password Reset Email'}
               </button>
             </form>
           </div>
