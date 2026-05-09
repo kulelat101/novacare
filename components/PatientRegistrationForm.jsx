@@ -20,7 +20,7 @@ const initialForm = () => ({
   attending: '',
   insurance: '',
   roomNo: '',
-  ward: 'Medical Ward',
+  ward: '',
   chiefComplaint: '',
   admittingDx: '',
   primaryDiagnosis: '',
@@ -154,7 +154,8 @@ export default function PatientRegistrationForm({ redirectAfterSave = true, comp
         </Field>
 
         <Field label="Status" required>
-          <select className="input" value={form.status} onChange={(event) => updateField('status', event.target.value)}>
+          <select className="input" value={form.status} onChange={(event) => updateField('status', event.target.value)} >
+            <option value=""></option>
             <option value="Admitted">Admitted</option>
             <option value="Outpatient">Outpatient</option>
             <option value="Discharged">Discharged</option>
