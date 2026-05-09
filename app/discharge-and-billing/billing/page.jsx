@@ -16,13 +16,10 @@ const COLLECTION_NAME = 'billingItems';
 
 const categoryOptions = [
   'Room Charges',
-  'Professional Fees',
-  'Operating Room Charges',
-  'Pharmacy',
-  'Laboratory',
+  'Procedure',
+  'Medications',
   'Diagnostics',
-  'Supplies and Materials',
-  'Miscellaneous Charges',
+  'Professional Fees',
   'Deductions',
   'Others',
 ];
@@ -35,7 +32,7 @@ const createEmptyRow = () => ({
   description: '',
   amount: '',
   status: '',
-  breakdown: '',
+  remarks: '',
 });
 
 function formatPeso(value) {
@@ -174,15 +171,15 @@ export default function BillingPage() {
   };
 
   const headers = isPatientView
-    ? ['Category', 'Description', 'Amount (₱)', 'Status', 'Breakdown']
-    : ['Category', 'Description', 'Amount (₱)', 'Status', 'Breakdown', 'Actions'];
+    ? ['Category', 'Description', 'Amount (₱)', 'Status', 'Remarks']
+    : ['Category', 'Description', 'Amount (₱)', 'Status', 'Remarks', 'Actions'];
 
   return (
     <AppShell title="Billing" subtitle={isPatientView ? 'View billing statement' : 'Patient billing items and payment status'}>
       <div className={isPatientView ? '' : 'pb-36'}>
         <PageIntro
           title="Billing Sheet"
-          description={isPatientView ? 'View your billing statement and balance.' : 'Track patient charges, payment status, and billing breakdown.'}
+          description={isPatientView ? 'View your billing statement and balance.' : 'Track patient charges, payment status, and billing remarks.'}
         />
 
         {(message || error) && (
@@ -338,12 +335,12 @@ export default function BillingPage() {
 
                     <td className="px-3 py-3">
                       {isPatientView ? (
-                        <p className="text-sm text-slate-700">{displayText(row.breakdown)}</p>
+                        <p className="text-sm text-slate-700">{displayText(row.remarks)}</p>
                       ) : (
                         <input
                           type="text"
-                          value={row.breakdown || ''}
-                          onChange={(e) => updateRow(row.id, 'breakdown', e.target.value)}
+                          value={row.remarks || ''}
+                          onChange={(e) => updateRow(row.id, 'remarks', e.target.value)}
                           placeholder=""
                           className="w-[240px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                         />

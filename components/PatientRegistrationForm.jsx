@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createOrLinkPatientAccount } from '@/lib/patientAccounts';
+import {
+  createOrLinkPatientAccount,
+  sendPatientPasswordResetEmail,
+} from '@/lib/patientAccounts';
 import {
   loadPatientProfile,
   savePatientProfile,
@@ -165,8 +168,20 @@ export default function PatientRegistrationForm({
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [createdAccount, setCreatedAccount] = useState(null);
+  const [isCopied, setIsCopied] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
   const isEditMode = Boolean(patientIdToEdit);
+
+  const patientAccountEmail = String(form.emailAddress || form.email || '').trim().toLowerCase();
+  const hasLinkedPatientAccount = Boolean(
+    form.patientUid
+      || form.patientUserId
+      || loadedPatient?.patientUid
+      || loadedPatient?.patientUserId
+      || loadedPatient?.hasPatientPortalAccount
+  );
 
   const fullName = useMemo(() => {
     return [form.firstName, form.middleName, form.lastName]
@@ -181,6 +196,9 @@ export default function PatientRegistrationForm({
     async function loadEditablePatient() {
       setMessage('');
       setError('');
+      setCreatedAccount(null);
+      setIsCopied(false);
+      setIsSendingReset(false);
 
       if (!patientIdToEdit) {
         setLoadedPatient(null);
@@ -234,12 +252,112 @@ export default function PatientRegistrationForm({
     setForm(isEditMode ? normalizeForm(loadedPatient) : emptyForm());
     setMessage('');
     setError('');
+    setCreatedAccount(null);
+    setIsCopied(false);
+    setIsSendingReset(false);
+  }
+
+  async function copyTextToClipboard(text) {
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+
+    if (typeof document !== 'undefined') {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+  }
+
+  async function copyPatientCredentials() {
+    if (!createdAccount) return;
+
+    const credentialsText = [
+      'Nova Care Hospital Patient Portal',
+      `Patient: ${createdAccount.fullName || ''}`,
+      `Username: ${createdAccount.email}`,
+      `Temporary password: ${createdAccount.temporaryPassword}`,
+      'Please change your password after logging in.',
+    ].filter(Boolean).join('\n');
+
+    try {
+      await copyTextToClipboard(credentialsText);
+      setIsCopied(true);
+    } catch (err) {
+      console.error(err);
+      setError('Could not copy the patient credentials. You can manually copy them from the panel.');
+    }
+  }
+
+  async function copyPatientPortalUsername() {
+    if (!patientAccountEmail) {
+      setError('Please add the patient email address first.');
+      return;
+    }
+
+    const usernameText = [
+      'Nova Care Hospital Patient Portal',
+      `Patient: ${fullName || form.patientId || ''}`,
+      `Username: ${patientAccountEmail}`,
+      'For password access, use Send Password Reset Email from the Patient Portal Account panel.',
+    ].filter(Boolean).join('\n');
+
+    try {
+      await copyTextToClipboard(usernameText);
+      setError('');
+      setMessage(`Patient portal username copied for ${patientAccountEmail}.`);
+    } catch (err) {
+      console.error(err);
+      setError('Could not copy the patient portal username. You can manually copy the email address.');
+    }
+  }
+
+  async function sendPatientPasswordReset() {
+    if (!patientAccountEmail) {
+      setError('Please add the patient email address first.');
+      return;
+    }
+
+    setIsSendingReset(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const email = await sendPatientPasswordResetEmail(patientAccountEmail);
+      setMessage(`Password reset email sent to ${email}. The patient can use the email link to set a new password.`);
+    } catch (err) {
+      console.error(err);
+      setError(err?.message || 'Could not send the password reset email. Please check if the email exists in Firebase Authentication.');
+    } finally {
+      setIsSendingReset(false);
+    }
+  }
+
+  function closeAccountPanel() {
+    setCreatedAccount(null);
+    setIsCopied(false);
+  }
+
+  function continueToDashboard() {
+    setCreatedAccount(null);
+    setIsCopied(false);
+    router.replace('/dashboard');
   }
 
   async function savePatient() {
     setIsSaving(true);
     setMessage('');
     setError('');
+    setCreatedAccount(null);
+    setIsCopied(false);
+    setIsSendingReset(false);
 
     try {
       const patientId = String(form.patientId || form.caseNo || generatePatientId()).trim();
@@ -284,8 +402,17 @@ export default function PatientRegistrationForm({
         savedPatient = await createPatient(payload);
       }
 
+      if (accountResult?.created) {
+        setCreatedAccount({
+          email: accountResult.email,
+          temporaryPassword: accountResult.temporaryPassword,
+          fullName: savedPatient.fullName || fullName || savedPatient.patientId,
+          patientId,
+        });
+      }
+
       const accountMessage = accountResult?.created
-        ? `\nPatient account created.\nUsername: ${accountResult.email}\nTemporary password: ${accountResult.temporaryPassword}`
+        ? '\nPatient account created. Copy the temporary credentials before leaving this page.'
         : accountResult?.linked
           ? `\nExisting patient account linked: ${accountResult.email}`
           : linkedUid
@@ -296,7 +423,7 @@ export default function PatientRegistrationForm({
       setLoadedPatient(savedPatient);
       onSaved?.(savedPatient);
 
-      if (redirectAfterSave && !isEditMode) {
+      if (redirectAfterSave && !isEditMode && !accountResult?.created) {
         router.replace('/dashboard');
       }
     } catch (err) {
@@ -321,10 +448,137 @@ export default function PatientRegistrationForm({
         </div>
       )}
 
+      {createdAccount && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/50 px-4 py-6">
+          <div className="w-full max-w-xl rounded-3xl border border-emerald-200 bg-white p-6 shadow-2xl">
+            <div className="mb-5">
+              <p className="section-kicker text-emerald-600">Patient Account Created</p>
+              <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Copy the temporary credentials</h2>
+              <p className="mt-2 text-sm text-slate-500">
+                This temporary password is shown only now. It is not saved in Firestore and cannot be viewed again later.
+              </p>
+            </div>
+
+            <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Patient</p>
+                <p className="mt-1 break-words text-sm font-semibold text-slate-800">
+                  {createdAccount.fullName || createdAccount.patientId}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Username / Email</p>
+                <p className="mt-1 break-all rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-sm font-semibold text-slate-900">
+                  {createdAccount.email}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Temporary Password</p>
+                <p className="mt-1 break-all rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-sm font-semibold text-slate-900">
+                  {createdAccount.temporaryPassword}
+                </p>
+              </div>
+            </div>
+
+            {isCopied && (
+              <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                Credentials copied. Give these to the patient and ask them to change the password after logging in.
+              </div>
+            )}
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={copyPatientCredentials}
+                className="rounded-xl bg-emerald-600 px-5 py-3 font-medium text-white transition hover:bg-emerald-700"
+              >
+                {isCopied ? 'Copied' : 'Copy Credentials'}
+              </button>
+
+              <button
+                type="button"
+                onClick={closeAccountPanel}
+                className="rounded-xl border border-slate-300 bg-white px-5 py-3 font-medium transition hover:bg-slate-50"
+              >
+                Stay on Page
+              </button>
+
+              {redirectAfterSave && !isEditMode && (
+                <button
+                  type="button"
+                  onClick={continueToDashboard}
+                  className="rounded-xl bg-cyan-600 px-5 py-3 font-medium text-white transition hover:bg-cyan-700"
+                >
+                  Continue to Dashboard
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {isLoadingPatient && (
         <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm font-medium text-slate-600">
           Loading patient details...
         </div>
+      )}
+
+      {isEditMode && (
+        <section className="section-card p-5 lg:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="section-kicker">Patient Portal Account</p>
+              <h2 className="mt-1 text-lg font-semibold text-slate-900 lg:text-xl">Login access</h2>
+              <p className="mt-2 max-w-3xl text-sm text-slate-500">
+                Temporary passwords are shown only when a new patient account is created. For an existing account, send a password reset email instead.
+              </p>
+            </div>
+
+            <span className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-bold ${
+              hasLinkedPatientAccount
+                ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+                : 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
+            }`}>
+              {hasLinkedPatientAccount ? 'Linked' : 'Not linked yet'}
+            </span>
+          </div>
+
+          <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Username / Email</p>
+              <p className="mt-1 break-all rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 font-mono text-sm font-semibold text-slate-900">
+                {patientAccountEmail || '—'}
+              </p>
+              {!hasLinkedPatientAccount && (
+                <p className="mt-2 text-xs text-slate-500">
+                  Save this patient record with an email address to create or link the patient portal account.
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
+              <button
+                type="button"
+                onClick={copyPatientPortalUsername}
+                disabled={!patientAccountEmail || isSaving || isLoadingPatient}
+                className="rounded-xl border border-slate-300 bg-white px-5 py-3 font-medium transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Copy Username
+              </button>
+
+              <button
+                type="button"
+                onClick={sendPatientPasswordReset}
+                disabled={!patientAccountEmail || !hasLinkedPatientAccount || isSendingReset || isSaving || isLoadingPatient}
+                className="rounded-xl bg-emerald-600 px-5 py-3 font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSendingReset ? 'Sending...' : 'Send Password Reset Email'}
+              </button>
+            </div>
+          </div>
+        </section>
       )}
 
       <Section title="Admission Information">

@@ -6,6 +6,8 @@ import { ROLES, canAccess, getDefaultRoute } from '@/lib/roles';
 import { useAuth } from './AuthProvider';
 import { usePatient } from './PatientProvider';
 
+const PASSWORD_CHANGE_PATH = '/change-password';
+
 const STAFF_PATIENT_OPTION_PATHS = new Set([
   '/patients/select',
   '/admission/registration',
@@ -20,6 +22,7 @@ export default function ProtectedRoute({ children }) {
   const { activePatientId, loadingPatients } = usePatient();
   const router = useRouter();
   const pathname = usePathname();
+  const isPasswordChangePage = pathname === PASSWORD_CHANGE_PATH;
 
   useEffect(() => {
     if (loading || loadingPatients) return;
@@ -30,6 +33,13 @@ export default function ProtectedRoute({ children }) {
     }
 
     const role = profile?.role;
+
+    if (profile?.mustChangePassword && !isPasswordChangePage) {
+      router.replace(PASSWORD_CHANGE_PATH);
+      return;
+    }
+
+    if (isPasswordChangePage) return;
 
     if (role && !canAccess(role, pathname)) {
       router.replace(getDefaultRoute(role));
@@ -44,7 +54,16 @@ export default function ProtectedRoute({ children }) {
     if (!activePatientId && role !== ROLES.PATIENT && !STAFF_PATIENT_OPTION_PATHS.has(pathname)) {
       router.replace('/patients/select');
     }
-  }, [loading, loadingPatients, user, profile, pathname, router, activePatientId]);
+  }, [
+    loading,
+    loadingPatients,
+    user,
+    profile,
+    pathname,
+    router,
+    activePatientId,
+    isPasswordChangePage,
+  ]);
 
   if (loading || !user || loadingPatients) {
     return (

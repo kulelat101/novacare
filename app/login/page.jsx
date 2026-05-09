@@ -3,10 +3,14 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { createLoginLog } from '@/lib/audit';
+
+function normalizeEmail(value) {
+  return String(value || '').trim().toLowerCase();
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +18,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
+  const [resetError, setResetError] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -21,16 +30,59 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const credential = await signInWithEmailAndPassword(auth, email, password);
+      const credential = await signInWithEmailAndPassword(auth, normalizeEmail(email), password);
       const profileSnap = await getDoc(doc(db, 'users', credential.user.uid));
       const profile = profileSnap.exists() ? profileSnap.data() : { role: 'nurse', fullName: 'Nurse' };
       await createLoginLog(credential.user, profile.role, profile.fullName);
+
+      if (profile?.mustChangePassword) {
+        router.replace('/change-password');
+        return;
+      }
+
       router.replace('/patients/select');
     } catch (err) {
       setError('Unable to login. Check your Firebase account credentials.');
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleForgotPassword(event) {
+    event.preventDefault();
+    setResetError('');
+    setResetMessage('');
+    setResetLoading(true);
+
+    try {
+      const targetEmail = normalizeEmail(resetEmail || email);
+
+      if (!targetEmail) {
+        throw new Error('Please enter your email address.');
+      }
+
+      await sendPasswordResetEmail(auth, targetEmail);
+      setResetMessage(
+        'Password help email sent. Please check the inbox for the secure reset instructions, then log in using the new password.'
+      );
+    } catch (err) {
+      if (err?.message === 'Please enter your email address.') {
+        setResetError(err.message);
+      } else if (err?.code === 'auth/invalid-email') {
+        setResetError('Please enter a valid email address.');
+      } else {
+        setResetError('Unable to send password help email. Please check the email address and try again.');
+      }
+    } finally {
+      setResetLoading(false);
+    }
+  }
+
+  function openForgotPassword() {
+    setResetEmail(normalizeEmail(email));
+    setResetError('');
+    setResetMessage('');
+    setShowForgotPassword(true);
   }
 
   return (
@@ -73,9 +125,18 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Password
-                </label>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <label className="block text-sm font-medium text-slate-700">
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={openForgotPassword}
+                    className="text-sm font-semibold text-cyan-700 hover:text-cyan-800"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
                 <input
                   type="password"
                   autoComplete="new-password"
@@ -98,20 +159,78 @@ export default function LoginPage() {
                 disabled={loading}
                 className="w-full rounded-xl bg-cyan-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {loading ? "Logging in..." : "Login"}
+                {loading ? 'Logging in...' : 'Login'}
               </button>
             </form>
 
             <p className="mt-6 text-center text-sm text-slate-500">
-              Need users?{" "}
+              Need users?{' '}
               <Link href="/signup" className="font-semibold text-cyan-700 hover:text-cyan-800">
                 Create account
               </Link>
             </p>
           </div>
         </section>
-
       </div>
+
+      {showForgotPassword && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/55 p-4">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Forgot Password</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Enter the account email address. NovaCare will send secure password reset instructions to that email.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(false)}
+                className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-100"
+              >
+                Close
+              </button>
+            </div>
+
+            <form onSubmit={handleForgotPassword} className="mt-5 space-y-4" autoComplete="off">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  autoComplete="off"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-cyan-600 focus:ring-2 focus:ring-cyan-100"
+                  placeholder=""
+                  required
+                />
+              </div>
+
+              {resetError && (
+                <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {resetError}
+                </p>
+              )}
+
+              {resetMessage && (
+                <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  {resetMessage}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={resetLoading}
+                className="w-full rounded-xl bg-cyan-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {resetLoading ? 'Sending...' : 'Email Password Help'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </main>    
 
   );
