@@ -11,6 +11,7 @@ function getFirebaseResetParams() {
   }
 
   const params = new URLSearchParams(window.location.search);
+
   return {
     mode: params.get('mode') || '',
     oobCode: params.get('oobCode') || '',
