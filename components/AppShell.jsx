@@ -73,8 +73,7 @@ function SidebarContent({ onNavigate }) {
             />
           </div>
           <div>
-            <p className="text-lg font-bold tracking-tight text-white">NovaCare</p>
-            <p className="text-xs text-cyan-100/80">Clinical workflow</p>
+            <p className="font-bold tracking-tight text-white text-3xl">NovaCare</p>
           </div>
         </div>
       </div>
