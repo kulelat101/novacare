@@ -276,7 +276,7 @@ export default function BillingPage() {
                           onChange={(e) => updateRow(row.id, 'category', e.target.value)}
                           className="w-[190px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                         >
-                          <option value="">Select category</option>
+                          <option value=""></option>
                           {categoryOptions.map((option) => (
                             <option key={option} value={option}>
                               {option}
@@ -294,7 +294,7 @@ export default function BillingPage() {
                           type="text"
                           value={row.description || ''}
                           onChange={(e) => updateRow(row.id, 'description', e.target.value)}
-                          placeholder="Description"
+                          placeholder=""
                           className="w-[280px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                         />
                       )}
@@ -308,7 +308,7 @@ export default function BillingPage() {
                           type="number"
                           value={row.amount || ''}
                           onChange={(e) => updateRow(row.id, 'amount', e.target.value)}
-                          placeholder="0.00"
+                          placeholder=""
                           className="w-[140px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                         />
                       )}
@@ -323,7 +323,7 @@ export default function BillingPage() {
                           onChange={(e) => updateRow(row.id, 'status', e.target.value)}
                           className="w-[160px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                         >
-                          <option value="">Select status</option>
+                          <option value=""></option>
                           {statusOptions.map((option) => (
                             <option key={option} value={option}>
                               {option}
@@ -341,7 +341,7 @@ export default function BillingPage() {
                           type="text"
                           value={row.remarks || ''}
                           onChange={(e) => updateRow(row.id, 'remarks', e.target.value)}
-                          placeholder="Remarks"
+                          placeholder=""
                           className="w-[240px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                         />
                       )}

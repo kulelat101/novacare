@@ -18,26 +18,26 @@ function flattenAssessmentRows(rows = []) {
 function buildAssessmentTableState(rows = []) {
   return flattenAssessmentRows(rows).reduce((acc, row) => {
     const options = (row.extraCheckboxes || []).reduce((optionAcc, option) => {
-      optionAcc[option.key] = option.defaultChecked || false;
+      optionAcc[option.key] = false;
       return optionAcc;
     }, {});
 
     const optionNotes = (row.extraCheckboxes || []).reduce((noteAcc, option) => {
       if (option.hasText) {
-        noteAcc[option.key] = option.defaultText || '';
+        noteAcc[option.key] = '';
       }
 
       return noteAcc;
     }, {});
 
     const selects = (row.extraSelects || []).reduce((selectAcc, select) => {
-      selectAcc[select.key] = select.defaultValue || '';
+      selectAcc[select.key] = '';
       return selectAcc;
     }, {});
 
     acc[row.key] = {
-      checked: row.defaultChecked || false,
-      note: row.defaultNote || '',
+      checked: false,
+      note: '',
       options,
       optionNotes,
       selects,
@@ -96,10 +96,10 @@ export default function RecordForm({
     const obj = {};
 
     fields.forEach((field) => {
-      if (field.defaultValue !== undefined) {
-        obj[field.name] = field.defaultValue;
-      } else if (field.type === 'checkbox') {
+      if (field.type === 'checkbox') {
         obj[field.name] = false;
+      } else if (field.defaultValue !== undefined) {
+        obj[field.name] = field.defaultValue;
       } else if (field.type === 'checkbox-group') {
         obj[field.name] = [];
       } else if (field.type === 'assessment-table') {
@@ -348,7 +348,7 @@ export default function RecordForm({
                   rows={row.rows || 3}
                   value={rowValue.note || ''}
                   onChange={(e) => handleAssessmentRowChange(field, row.key, { note: e.target.value })}
-                  placeholder={row.placeholder || ''}
+                  placeholder=""
                   className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
                 />
               ) : hasNote && row.noteType === 'select' ? (
@@ -357,7 +357,7 @@ export default function RecordForm({
                   onChange={(e) => handleAssessmentRowChange(field, row.key, { note: e.target.value })}
                   className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
                 >
-                  <option value="">{row.placeholder || 'Select option'}</option>
+                  <option value=""></option>
                   {(row.noteOptions || []).map((option) => (
                     <option key={option} value={option}>
                       {option}
@@ -369,7 +369,7 @@ export default function RecordForm({
                   type="text"
                   value={rowValue.note || ''}
                   onChange={(e) => handleAssessmentRowChange(field, row.key, { note: e.target.value })}
-                  placeholder={row.placeholder || ''}
+                  placeholder=""
                   className="w-full border-0 border-b border-slate-300 bg-transparent px-1 py-1 text-sm font-medium text-slate-700 outline-none transition focus:border-cyan-500 focus:ring-0"
                 />
               ) : null}
@@ -384,7 +384,7 @@ export default function RecordForm({
                         onChange={(e) => handleAssessmentSelectChange(field, row.key, select.key, e.target.value)}
                         className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium normal-case tracking-normal text-slate-700 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
                       >
-                        <option value="">{select.placeholder || 'Select'}</option>
+                        <option value=""></option>
                         {(select.options || []).map((option) => (
                           <option key={option} value={option}>
                             {option}
@@ -421,7 +421,7 @@ export default function RecordForm({
                             type="text"
                             value={rowValue.optionNotes?.[option.key] || ''}
                             onChange={(e) => handleAssessmentOptionNoteChange(field, row.key, option.key, e.target.value)}
-                            placeholder={option.placeholder || ''}
+                            placeholder=""
                             className="min-w-[180px] flex-1 border-0 border-b border-slate-300 bg-transparent px-1 py-1 text-sm font-medium normal-case tracking-normal text-slate-700 outline-none transition focus:border-cyan-500 focus:ring-0 disabled:opacity-50"
                             disabled={!checked}
                           />
@@ -586,7 +586,7 @@ export default function RecordForm({
                           rows={4}
                           value={formData[field.name] || ''}
                           onChange={(e) => handleChange(field.name, e.target.value)}
-                          placeholder={field.placeholder || ''}
+                          placeholder=""
                           required={field.required || false}
                           className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
                         />
@@ -597,7 +597,7 @@ export default function RecordForm({
                           required={field.required || false}
                           className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
                         >
-                          <option value="">{field.placeholder || 'Select option'}</option>
+                          <option value=""></option>
 
                           {field.options?.map((option) => (
                             <option key={option} value={option}>
@@ -610,7 +610,7 @@ export default function RecordForm({
                           type={field.type || 'text'}
                           value={formData[field.name] || ''}
                           onChange={(e) => handleChange(field.name, e.target.value)}
-                          placeholder={field.placeholder || ''}
+                          placeholder=""
                           required={field.required || false}
                           className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
                         />

@@ -245,7 +245,7 @@ export default function IVSheetPage() {
                           type="text"
                           value={row.solutionBottle || ''}
                           onChange={(e) => updateRow(row.id, 'solutionBottle', e.target.value)}
-                          placeholder="D5LR #1"
+                          placeholder=""
                           className="w-[210px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                         />
                       </td>
@@ -304,7 +304,7 @@ export default function IVSheetPage() {
                           onChange={(e) => updateRow(row.id, 'status', e.target.value)}
                           className="w-[160px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                         >
-                          <option value="">Select status</option>
+                          <option value=""></option>
                           {statusOptions.map((option) => (
                             <option key={option} value={option}>
                               {option}
@@ -318,7 +318,7 @@ export default function IVSheetPage() {
                           type="text"
                           value={row.remarks || ''}
                           onChange={(e) => updateRow(row.id, 'remarks', e.target.value)}
-                          placeholder="Remarks"
+                          placeholder=""
                           className="w-[220px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                         />
                       </td>

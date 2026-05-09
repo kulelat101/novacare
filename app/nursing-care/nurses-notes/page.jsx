@@ -20,7 +20,6 @@ const emptyForm = {
   shift: 'AM (6-2)',
   assessment: '',
   diagnosis: '',
-  planning: '',
   interventions: '',
   evaluation: '',
   nurse: '',
@@ -143,7 +142,7 @@ export default function NursesNotesPage() {
     <AppShell title="Nurse's Notes" subtitle="Restricted nursing documentation">
       <div className="pb-36">
         <PageIntro
-          title="ADPIE Nurse's Notes"
+          title="APIE Nurse's Notes"
           description="Document structured nursing notes and interventions."
         />
 
@@ -214,25 +213,12 @@ export default function NursesNotesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-800">
-                  D — Nursing Diagnosis
+                  P — Problem / Nursing Diagnosis
                 </label>
                 <textarea
                   rows={3}
                   value={form.diagnosis}
                   onChange={(e) => handleChange('diagnosis', e.target.value)}
-                  placeholder=""
-                  className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-800">
-                  P — Planning
-                </label>
-                <textarea
-                  rows={3}
-                  value={form.planning}
-                  onChange={(e) => handleChange('planning', e.target.value)}
                   placeholder=""
                   className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                 />
@@ -336,11 +322,6 @@ export default function NursesNotesPage() {
                       <div>
                         <p className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-500">Problem / Diagnosis</p>
                         <p className="whitespace-pre-wrap text-sm text-slate-700">{note.diagnosis || '—'}</p>
-                      </div>
-
-                      <div>
-                        <p className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-500">Problem / Diagnosis</p>
-                        <p className="whitespace-pre-wrap text-sm text-slate-700">{note.planning || '—'}</p>
                       </div>
 
                       <div>

@@ -26,7 +26,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { auth } from '@/lib/firebase';
-import { MODULES, ROLES } from '@/lib/roles';
+import { MODULES } from '@/lib/roles';
 import { closeLoginLog } from '@/lib/audit';
 import { useAuth } from './AuthProvider';
 import { formatPatientName, usePatient } from './PatientProvider';
@@ -123,7 +123,6 @@ export default function AppShell({ title, subtitle, children, showHeader = true 
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const displayName = useMemo(() => profile?.fullName || user?.email || 'User', [profile, user]);
-  const patientHeaderHref = profile?.role === ROLES.PATIENT ? '/admission/registration' : '/patients/select';
 
   async function handleLogout() {
     await closeLoginLog();
@@ -167,7 +166,7 @@ export default function AppShell({ title, subtitle, children, showHeader = true 
                 <div className="flex items-center gap-3">
                   {activePatientId && (
                     <Link
-                      href={patientHeaderHref}
+                      href="/patients/select"
                       className="hidden rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-2.5 text-left shadow-sm transition hover:bg-cyan-100 xl:block"
                     >
                       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-700">Active Patient</p>

@@ -224,7 +224,7 @@ export default function MedicationRecordPage() {
                         type="text"
                         value={row.medication || ''}
                         onChange={(e) => updateRow(row.id, 'medication', e.target.value)}
-                        placeholder="Medication"
+                        placeholder=""
                         className="w-[190px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                       />
                     </td>
@@ -234,7 +234,7 @@ export default function MedicationRecordPage() {
                         type="text"
                         value={row.dose || ''}
                         onChange={(e) => updateRow(row.id, 'dose', e.target.value)}
-                        placeholder="Dose"
+                        placeholder=""
                         className="w-[110px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                       />
                     </td>
@@ -244,7 +244,7 @@ export default function MedicationRecordPage() {
                         type="text"
                         value={row.route || ''}
                         onChange={(e) => updateRow(row.id, 'route', e.target.value)}
-                        placeholder="Route"
+                        placeholder=""
                         className="w-[110px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                       />
                     </td>
@@ -254,7 +254,7 @@ export default function MedicationRecordPage() {
                         type="text"
                         value={row.frequency || ''}
                         onChange={(e) => updateRow(row.id, 'frequency', e.target.value)}
-                        placeholder="Frequency"
+                        placeholder=""
                         className="w-[140px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                       />
                     </td>
@@ -264,7 +264,7 @@ export default function MedicationRecordPage() {
                         type="text"
                         value={row.orderedBy || ''}
                         onChange={(e) => updateRow(row.id, 'orderedBy', e.target.value)}
-                        placeholder="Physician"
+                        placeholder=""
                         className="w-[160px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                       />
                     </td>
@@ -284,7 +284,7 @@ export default function MedicationRecordPage() {
                         onChange={(e) => updateRow(row.id, 'status', e.target.value)}
                         className="w-[150px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                       >
-                        <option value="">Select status</option>
+                        <option value=""></option>
                         {statusOptions.map((option) => (
                           <option key={option} value={option}>
                             {option}
@@ -298,7 +298,7 @@ export default function MedicationRecordPage() {
                         type="text"
                         value={row.nurse || ''}
                         onChange={(e) => updateRow(row.id, 'nurse', e.target.value)}
-                        placeholder="Nurse"
+                        placeholder=""
                         className="w-[150px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                       />
                     </td>
@@ -308,7 +308,7 @@ export default function MedicationRecordPage() {
                         type="text"
                         value={row.remarks || ''}
                         onChange={(e) => updateRow(row.id, 'remarks', e.target.value)}
-                        placeholder="Remarks"
+                        placeholder=""
                         className="w-[220px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                       />
                     </td>

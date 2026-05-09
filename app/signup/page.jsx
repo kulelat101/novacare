@@ -62,7 +62,7 @@ export default function SignupPage() {
           <div>
             <label className="label">Role</label>
             <select className="input" value={role} onChange={(e) => setRole(e.target.value)}>
-              <option value="">Select role</option>
+              <option value=""></option>
               <option value="patient">Patient</option>
               <option value="doctor">Doctor</option>
               <option value="nurse">Nurse</option>

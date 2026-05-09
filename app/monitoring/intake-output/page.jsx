@@ -237,23 +237,23 @@ export default function IntakeOutputPage() {
     }
   };
 
-  const renderNumberInput = (row, fieldKey, placeholder = '0') => (
+  const renderNumberInput = (row, fieldKey) => (
     <input
       type="number"
       min="0"
       value={row[fieldKey] || ''}
       onChange={(e) => updateRow(row.id, fieldKey, e.target.value)}
-      placeholder={placeholder}
+      placeholder=""
       className="w-[90px] rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
     />
   );
 
-  const renderTextInput = (row, fieldKey, placeholder = '') => (
+  const renderTextInput = (row, fieldKey) => (
     <input
       type="text"
       value={row[fieldKey] || ''}
       onChange={(e) => updateRow(row.id, fieldKey, e.target.value)}
-      placeholder={placeholder}
+      placeholder=""
       className="w-[150px] rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
     />
   );
@@ -408,7 +408,7 @@ export default function IntakeOutputPage() {
                           onChange={(e) => updateRow(row.id, 'shift', e.target.value)}
                           className="w-[145px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                         >
-                          <option value="">Select shift</option>
+                          <option value=""></option>
                           {shiftOptions.map((option) => (
                             <option key={option} value={option}>
                               {option}
@@ -430,7 +430,7 @@ export default function IntakeOutputPage() {
                       {outputFields.map((field) => (
                         <td key={field.key} className="border-r border-slate-100 px-3 py-3">
                           {field.inputType === 'text'
-                            ? renderTextInput(row, field.key, field.placeholder)
+                            ? renderTextInput(row, field.key)
                             : renderNumberInput(row, field.key)}
                         </td>
                       ))}

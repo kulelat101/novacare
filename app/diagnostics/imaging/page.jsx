@@ -530,7 +530,7 @@ export default function ImagingPage() {
                 onChange={(e) => handleChange('imagingType', e.target.value)}
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
               >
-                <option value="">Select imaging type</option>
+                <option value=""></option>
                 {IMAGING_TYPES.map((type) => (
                   <option key={type} value={type}>
                     {type}
@@ -547,7 +547,7 @@ export default function ImagingPage() {
                 type="text"
                 value={formData.bodyPart}
                 onChange={(e) => handleChange('bodyPart', e.target.value)}
-                placeholder="Example: Chest, abdomen, skull, left arm"
+                placeholder=""
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
               />
             </div>
@@ -560,7 +560,7 @@ export default function ImagingPage() {
                 type="text"
                 value={formData.radiologist}
                 onChange={(e) => handleChange('radiologist', e.target.value)}
-                placeholder="Optional"
+                placeholder=""
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
               />
             </div>
@@ -573,7 +573,7 @@ export default function ImagingPage() {
                 rows={4}
                 value={formData.findings}
                 onChange={(e) => handleChange('findings', e.target.value)}
-                placeholder="Enter imaging findings..."
+                placeholder=""
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
               />
             </div>
@@ -586,7 +586,7 @@ export default function ImagingPage() {
                 rows={4}
                 value={formData.impression}
                 onChange={(e) => handleChange('impression', e.target.value)}
-                placeholder="Enter final impression..."
+                placeholder=""
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
               />
             </div>
@@ -599,7 +599,7 @@ export default function ImagingPage() {
                 rows={3}
                 value={formData.remarks}
                 onChange={(e) => handleChange('remarks', e.target.value)}
-                placeholder="Optional remarks..."
+                placeholder=""
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
               />
             </div>

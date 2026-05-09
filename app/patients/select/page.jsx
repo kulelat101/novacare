@@ -114,7 +114,7 @@ export default function PatientSelectPage() {
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search by patient name, ID, room, diagnosis, email..."
+                placeholder=""
                 className="input"
               />
             </div>

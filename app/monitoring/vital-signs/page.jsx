@@ -15,7 +15,7 @@ const COLLECTION_NAME = 'vitalSigns';
 
 const createEmptyRow = () => ({
   id: createClientId('vitals'),
-  datetime: '',
+  datetime: getLocalDateTime(),
   bloodPressure: '',
   temperature: '',
   pulseRate: '',
@@ -203,7 +203,6 @@ export default function VitalSignsPage() {
                         type="datetime-local"
                         value={row.datetime || ''}
                         onChange={(e) => updateRow(row.id, 'datetime', e.target.value)}
-                        placeholder=""
                         className="w-[180px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                       />
                     </td>
