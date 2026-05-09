@@ -113,16 +113,7 @@ export default function PatientSelectPage() {
               <button type="button" onClick={refreshPatients} className="btn-secondary">
                 Refresh
               </button>
-
-              <button
-                type="button"
-                onClick={handleUseDemoPatient}
-                disabled={isCreatingDemo}
-                className="btn-secondary"
-              >
-                {isCreatingDemo ? 'Preparing...' : 'Use Demo Patient'}
-              </button>
-
+              
               <Link href="/admission/registration" className="btn-primary text-center">
                 + Register Patient
               </Link>
