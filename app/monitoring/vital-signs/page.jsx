@@ -15,7 +15,7 @@ const COLLECTION_NAME = 'vitalSigns';
 
 const createEmptyRow = () => ({
   id: createClientId('vitals'),
-  datetime: getLocalDateTime(),
+  datetime: '',
   bloodPressure: '',
   temperature: '',
   pulseRate: '',
@@ -203,6 +203,7 @@ export default function VitalSignsPage() {
                         type="datetime-local"
                         value={row.datetime || ''}
                         onChange={(e) => updateRow(row.id, 'datetime', e.target.value)}
+                        placeholder=""
                         className="w-[180px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                       />
                     </td>
@@ -212,7 +213,7 @@ export default function VitalSignsPage() {
                         type="text"
                         value={row.bloodPressure || ''}
                         onChange={(e) => updateRow(row.id, 'bloodPressure', e.target.value)}
-                        placeholder="120/80"
+                        placeholder=""
                         className="w-[100px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                       />
                     </td>
@@ -223,7 +224,7 @@ export default function VitalSignsPage() {
                         step="0.1"
                         value={row.temperature || ''}
                         onChange={(e) => updateRow(row.id, 'temperature', e.target.value)}
-                        placeholder="37.0"
+                        placeholder=""
                         className="w-[80px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                       />
                     </td>
@@ -233,7 +234,7 @@ export default function VitalSignsPage() {
                         type="number"
                         value={row.pulseRate || ''}
                         onChange={(e) => updateRow(row.id, 'pulseRate', e.target.value)}
-                        placeholder="80"
+                        placeholder=""
                         className="w-[80px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                       />
                     </td>
@@ -243,7 +244,7 @@ export default function VitalSignsPage() {
                         type="number"
                         value={row.respiratoryRate || ''}
                         onChange={(e) => updateRow(row.id, 'respiratoryRate', e.target.value)}
-                        placeholder="18"
+                        placeholder=""
                         className="w-[80px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                       />
                     </td>
@@ -253,7 +254,7 @@ export default function VitalSignsPage() {
                         type="number"
                         value={row.oxygenSaturation || ''}
                         onChange={(e) => updateRow(row.id, 'oxygenSaturation', e.target.value)}
-                        placeholder="98"
+                        placeholder=""
                         className="w-[80px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                       />
                     </td>

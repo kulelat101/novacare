@@ -55,7 +55,7 @@ const fields = [
     name: 'finalDiagnosis',
     label: 'Final Diagnosis',
     type: 'textarea',
-    placeholder: 'Final diagnosis upon discharge...',
+    placeholder: '',
     required: true,
   },
   {
@@ -63,16 +63,14 @@ const fields = [
     name: 'diagnosticSummary',
     label: 'Diagnostic Summary',
     type: 'textarea',
-    placeholder:
-      'Summarize relevant laboratory, imaging, and diagnostic findings during admission...',
+    placeholder: '',
   },
   {
     section: 'Discharge Diagnostics',
     name: 'proceduresPerformed',
     label: 'Procedures Performed',
     type: 'textarea',
-    placeholder:
-      'List procedures, operations, treatments, or special interventions performed...',
+    placeholder: '',
   },
 
   // Discharge Instructions
@@ -81,23 +79,21 @@ const fields = [
     name: 'dischargeMedications',
     label: 'Discharge Medications',
     type: 'textarea',
-    placeholder:
-      'List discharge medications with dose, route, frequency, and duration...',
+    placeholder: '',
   },
   {
     section: 'Discharge Instructions',
     name: 'patientInstructions',
     label: 'Patient Instructions',
     type: 'textarea',
-    placeholder:
-      'Activity restrictions, diet, wound care, warning signs to watch for...',
+    placeholder: '',
     required: true,
   },
   {
     section: 'Discharge Instructions',
     name: 'followUpPlan',
     label: 'Follow-up Plan',
-    placeholder: 'e.g., OPD follow-up in 1 week with Dr. _____',
+    placeholder: '',
     required: true,
   },
 ];
@@ -140,12 +136,18 @@ function BillingClearancePanel() {
 
   const billingSummary = useMemo(() => {
     let totalCharges = 0;
+    let deductions = 0;
     let paidAmount = 0;
     let waivedAmount = 0;
-    let pendingAmount = 0;
 
     billingRows.forEach((item) => {
       const amount = Number(item.amount) || 0;
+      const isDeduction = item.category === 'Deductions';
+
+      if (isDeduction) {
+        deductions += amount;
+        return;
+      }
 
       totalCharges += amount;
 
@@ -153,25 +155,27 @@ function BillingClearancePanel() {
         paidAmount += amount;
       } else if (item.status === 'Waived') {
         waivedAmount += amount;
-      } else {
-        pendingAmount += amount;
       }
     });
 
-    const balance = totalCharges - paidAmount - waivedAmount;
+    const totalBill = Math.max(totalCharges - deductions, 0);
+    const balance = Math.max(totalBill - paidAmount - waivedAmount, 0);
+    const pendingAmount = balance;
 
     let clearanceStatus = 'No Billing Items';
 
-    if (totalCharges > 0 && balance <= 0) {
+    if (billingRows.length > 0 && balance <= 0) {
       clearanceStatus = 'Cleared';
     }
 
-    if (totalCharges > 0 && balance > 0) {
+    if (billingRows.length > 0 && balance > 0) {
       clearanceStatus = 'For Billing Clearance';
     }
 
     return {
       totalCharges,
+      deductions,
+      totalBill,
       paidAmount,
       waivedAmount,
       pendingAmount,
@@ -212,7 +216,7 @@ function BillingClearancePanel() {
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
           <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
             Total Charges
@@ -220,6 +224,26 @@ function BillingClearancePanel() {
 
           <h3 className="mt-2 text-2xl font-bold text-slate-900">
             {formatPeso(billingSummary.totalCharges)}
+          </h3>
+        </div>
+
+        <div className="rounded-2xl border border-violet-200 bg-violet-50 p-5">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-violet-700">
+            Deductions
+          </p>
+
+          <h3 className="mt-2 text-2xl font-bold text-violet-900">
+            - {formatPeso(billingSummary.deductions)}
+          </h3>
+        </div>
+
+        <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-5">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-cyan-700">
+            Total Bill
+          </p>
+
+          <h3 className="mt-2 text-2xl font-bold text-cyan-900">
+            {formatPeso(billingSummary.totalBill)}
           </h3>
         </div>
 
@@ -234,6 +258,7 @@ function BillingClearancePanel() {
             )}
           </h3>
         </div>
+
 
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
           <p className="text-[11px] font-bold uppercase tracking-wide text-amber-700">

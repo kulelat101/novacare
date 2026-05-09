@@ -41,6 +41,49 @@ function formatValue(value) {
   }
 
   if (typeof value === 'object') {
+    const entries = Object.entries(value);
+    const looksLikeAssessmentTable = entries.length > 0 && entries.every(([, item]) => {
+      return item && typeof item === 'object' && !Array.isArray(item) && (
+        'checked' in item ||
+        'note' in item ||
+        'options' in item ||
+        'optionNotes' in item ||
+        'selects' in item
+      );
+    });
+
+    if (looksLikeAssessmentTable) {
+      return entries
+        .map(([key, item]) => {
+          const selectedOptions = item.options && typeof item.options === 'object'
+            ? Object.entries(item.options)
+                .filter(([, selected]) => selected)
+                .map(([optionKey]) => {
+                  const note = item.optionNotes?.[optionKey]
+                    ? `: ${item.optionNotes[optionKey]}`
+                    : '';
+
+                  return `${formatLabel(optionKey)}${note}`;
+                })
+            : [];
+
+          const selectedDropdowns = item.selects && typeof item.selects === 'object'
+            ? Object.entries(item.selects)
+                .filter(([, selected]) => selected !== null && selected !== undefined && selected !== '')
+                .map(([selectKey, selected]) => `${formatLabel(selectKey)}: ${selected}`)
+            : [];
+
+          const hasDetails = Boolean(item.note) || selectedOptions.length > 0 || selectedDropdowns.length > 0;
+          const checked = item.checked ? '✓' : hasDetails ? '' : '—';
+          const note = item.note ? ` - ${item.note}` : '';
+          const optionText = selectedOptions.length > 0 ? ` (${selectedOptions.join(', ')})` : '';
+          const dropdownText = selectedDropdowns.length > 0 ? ` [${selectedDropdowns.join(', ')}]` : '';
+
+          return `${formatLabel(key)}: ${checked}${note}${optionText}${dropdownText}`.trim();
+        })
+        .join('\n');
+    }
+
     return JSON.stringify(value);
   }
 
@@ -101,7 +144,7 @@ function DefaultDetails({ record }) {
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                 {formatLabel(key)}
               </p>
-              <p className="mt-1 break-words text-sm font-medium text-slate-800">
+              <p className="mt-1 whitespace-pre-line break-words text-sm font-medium text-slate-800">
                 {formatValue(value)}
               </p>
             </div>

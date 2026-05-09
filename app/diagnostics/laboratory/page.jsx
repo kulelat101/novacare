@@ -464,7 +464,7 @@ export default function LaboratoryPage() {
                 type="text"
                 value={meta.sampleType}
                 onChange={(event) => updateMeta('sampleType', event.target.value)}
-                placeholder="e.g., Whole Blood"
+                placeholder=""
                 className="input"
               />
             </div>
@@ -559,7 +559,7 @@ export default function LaboratoryPage() {
                               type="text"
                               value={results[test.key] || ''}
                               onChange={(event) => updateResult(test.key, event.target.value)}
-                              placeholder="Enter result"
+                              placeholder=""
                               className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                             />
                           </td>
@@ -597,7 +597,7 @@ export default function LaboratoryPage() {
             rows={4}
             value={remarks}
             onChange={(event) => setRemarks(event.target.value)}
-            placeholder="Optional notes, interpretation, or remarks..."
+            placeholder=""
             className="input"
           />
 

@@ -18,6 +18,7 @@ const categoryOptions = [
   'Medications',
   'Diagnostics',
   'Professional Fees',
+  'Deductions',
   'Others',
 ];
 
@@ -73,24 +74,32 @@ export default function BillingPage() {
     return rows.reduce(
       (acc, row) => {
         const amount = Number(row.amount) || 0;
+        const isDeduction = row.category === 'Deductions';
 
-        acc.totalCharges += amount;
-
-        if (row.status === 'Paid') {
-          acc.paid += amount;
-        } else if (row.status === 'Waived') {
-          acc.paid += amount;
-        } else if (row.status === 'Partially Paid') {
-          acc.unpaid += amount;
+        if (isDeduction) {
+          acc.deductions += amount;
         } else {
-          acc.unpaid += amount;
+          acc.totalCharges += amount;
+
+          if (row.status === 'Paid' || row.status === 'Waived') {
+            acc.paid += amount;
+          }
         }
 
-        acc.balance = acc.totalCharges - acc.paid;
+        acc.totalBill = Math.max(acc.totalCharges - acc.deductions, 0);
+        acc.balance = Math.max(acc.totalBill - acc.paid, 0);
+        acc.unpaid = acc.balance;
 
         return acc;
       },
-      { totalCharges: 0, paid: 0, unpaid: 0, balance: 0 }
+      {
+        totalCharges: 0,
+        deductions: 0,
+        totalBill: 0,
+        paid: 0,
+        unpaid: 0,
+        balance: 0,
+      }
     );
   }, [rows]);
 
@@ -172,7 +181,7 @@ export default function BillingPage() {
           </div>
         )}
 
-        <section className="mb-6 grid gap-4 md:grid-cols-4">
+        <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Total Charges</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-900">
@@ -180,14 +189,23 @@ export default function BillingPage() {
             </h3>
           </div>
 
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Paid</p>
-            <h3 className="mt-2 text-2xl font-bold text-emerald-900">{formatPeso(summary.paid)}</h3>
+          <div className="rounded-2xl border border-violet-200 bg-violet-50 p-5 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wide text-violet-700">Deductions</p>
+            <h3 className="mt-2 text-2xl font-bold text-violet-900">
+              - {formatPeso(summary.deductions)}
+            </h3>
           </div>
 
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Unpaid</p>
-            <h3 className="mt-2 text-2xl font-bold text-amber-900">{formatPeso(summary.unpaid)}</h3>
+          <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-5 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wide text-cyan-700">Total Bill</p>
+            <h3 className="mt-2 text-2xl font-bold text-cyan-900">
+              {formatPeso(summary.totalBill)}
+            </h3>
+          </div>
+
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Paid / Waived</p>
+            <h3 className="mt-2 text-2xl font-bold text-emerald-900">{formatPeso(summary.paid)}</h3>
           </div>
 
           <div className="rounded-2xl border border-red-200 bg-red-50 p-5 shadow-sm">

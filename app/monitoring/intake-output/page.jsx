@@ -36,13 +36,17 @@ const intakeFields = dedupeFields([
 ]);
 
 const outputFields = dedupeFields([
-  { key: 'urine', label: 'URINE' },
-  { key: 'bm', label: 'BM' },
-  { key: 'drainageTubes', label: 'DRAINAGE TUBES' },
-  { key: 'vomitus', label: 'VOMITUS' },
-  { key: 'bloodLoss', label: 'BLOOD LOSS' },
-  { key: 'outputOthers', label: 'OTHERS' },
+  { key: 'urine', label: 'URINE', inputType: 'number' },
+  { key: 'bm', label: 'BM', inputType: 'text', placeholder: 'e.g. 1x, soft, none' },
+  { key: 'drainageTubes', label: 'DRAINAGE TUBES', inputType: 'number' },
+  { key: 'vomitus', label: 'VOMITUS', inputType: 'text', placeholder: 'e.g. none, 1 episode' },
+  { key: 'bloodLoss', label: 'BLOOD LOSS', inputType: 'number' },
+  { key: 'outputOthers', label: 'OTHERS', inputType: 'number' },
 ]);
+
+const outputTotalFields = outputFields.filter((field) => {
+  return field.key !== 'bm' && field.key !== 'vomitus';
+});
 
 const createEmptyRow = () => ({
   id: createClientId('io'),
@@ -73,7 +77,7 @@ function getRowIntakeTotal(row) {
 }
 
 function getRowOutputTotal(row) {
-  return outputFields.reduce((total, field) => total + toNumber(row[field.key]), 0);
+  return outputTotalFields.reduce((total, field) => total + toNumber(row[field.key]), 0);
 }
 
 function hasMeaningfulValue(row) {
@@ -241,6 +245,16 @@ export default function IntakeOutputPage() {
       onChange={(e) => updateRow(row.id, fieldKey, e.target.value)}
       placeholder={placeholder}
       className="w-[90px] rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+    />
+  );
+
+  const renderTextInput = (row, fieldKey, placeholder = '') => (
+    <input
+      type="text"
+      value={row[fieldKey] || ''}
+      onChange={(e) => updateRow(row.id, fieldKey, e.target.value)}
+      placeholder={placeholder}
+      className="w-[150px] rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
     />
   );
 
@@ -415,12 +429,20 @@ export default function IntakeOutputPage() {
 
                       {outputFields.map((field) => (
                         <td key={field.key} className="border-r border-slate-100 px-3 py-3">
-                          {renderNumberInput(row, field.key)}
+                          {field.inputType === 'text'
+                            ? renderTextInput(row, field.key, field.placeholder)
+                            : renderNumberInput(row, field.key)}
                         </td>
                       ))}
 
                       <td className="border-r border-slate-100 bg-amber-50/60 px-3 py-3 font-bold text-amber-900">
-                        {outputTotal}
+                        <div className="space-y-1">
+                          <div>{outputTotal}</div>
+                          <div className="text-xs font-medium leading-5 text-amber-800">
+                            <div>BM: {row.bm || '—'}</div>
+                            <div>V: {row.vomitus || '—'}</div>
+                          </div>
+                        </div>
                       </td>
 
                       <td className="px-3 py-3">
