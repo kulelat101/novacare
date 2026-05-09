@@ -27,6 +27,16 @@ function formatValue(value) {
   }
 
   if (Array.isArray(value)) {
+    if (value.length === 0) return '—';
+
+    const hasOnlySimpleValues = value.every((item) => {
+      return item === null || ['string', 'number', 'boolean'].includes(typeof item);
+    });
+
+    if (hasOnlySimpleValues) {
+      return value.map((item) => String(item)).join(', ');
+    }
+
     return `${value.length} item${value.length === 1 ? '' : 's'}`;
   }
 

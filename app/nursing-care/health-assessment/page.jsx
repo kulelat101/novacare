@@ -49,13 +49,12 @@ const fields = [
     section: 'Neurological Status',
     name: 'orientation',
     label: 'Orientation',
-    type: 'select',
+    type: 'checkbox-group',
     options: [
-      'Person',
-      'Place',
-      'Time',
-      'Situation',
-      'Oriented x4',
+      'PERSON',
+      'PLACE',
+      'TIME',
+      'SITUATION',
     ],
   },
   {

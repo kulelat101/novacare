@@ -25,6 +25,8 @@ export default function RecordForm({
         obj[field.name] = field.defaultValue;
       } else if (field.type === 'checkbox') {
         obj[field.name] = false;
+      } else if (field.type === 'checkbox-group') {
+        obj[field.name] = [];
       } else if (field.type === 'range') {
         obj[field.name] = field.min ?? 0;
       } else if (field.type === 'date') {
@@ -64,6 +66,39 @@ export default function RecordForm({
       ...prev,
       [name]: value,
     }));
+  };
+
+  const normalizeCheckboxGroupValue = (value) => {
+    if (Array.isArray(value)) {
+      return value.map((item) => String(item).toUpperCase());
+    }
+
+    if (typeof value === 'string') {
+      if (value.toLowerCase() === 'oriented x4') {
+        return ['PERSON', 'PLACE', 'TIME', 'SITUATION'];
+      }
+
+      return value
+        .split(',')
+        .map((item) => item.trim().toUpperCase())
+        .filter(Boolean);
+    }
+
+    return [];
+  };
+
+  const handleCheckboxGroupChange = (name, option, checked) => {
+    setFormData((prev) => {
+      const selected = normalizeCheckboxGroupValue(prev[name]);
+      const normalizedOption = String(option).toUpperCase();
+
+      return {
+        ...prev,
+        [name]: checked
+          ? Array.from(new Set([...selected, normalizedOption]))
+          : selected.filter((item) => item !== normalizedOption),
+      };
+    });
   };
 
   const handleSave = async () => {
@@ -139,7 +174,7 @@ export default function RecordForm({
                   key={field.name}
                   className={field.type === 'textarea' ? 'md:col-span-2' : ''}
                 >
-                  {field.type !== 'checkbox' && field.type !== 'range' && (
+                  {field.type !== 'checkbox' && field.type !== 'checkbox-group' && field.type !== 'range' && (
                     <label className="mb-2 block text-sm font-medium text-slate-700">
                       {field.label}
                       {field.required && <span className="ml-1 text-red-500">*</span>}
@@ -187,6 +222,35 @@ export default function RecordForm({
                         {field.checkboxLabel || field.label}
                       </span>
                     </label>
+                  ) : field.type === 'checkbox-group' ? (
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                      <p className="mb-3 text-sm font-medium text-slate-700">
+                        {field.label}
+                        {field.required && <span className="ml-1 text-red-500">*</span>}
+                      </p>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {field.options?.map((option) => {
+                          const selected = normalizeCheckboxGroupValue(formData[field.name]);
+                          const normalizedOption = String(option).toUpperCase();
+
+                          return (
+                            <label
+                              key={option}
+                              className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selected.includes(normalizedOption)}
+                                onChange={(e) => handleCheckboxGroupChange(field.name, option, e.target.checked)}
+                                className="h-5 w-5 accent-cyan-600"
+                              />
+                              <span>{option}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
                   ) : field.type === 'textarea' ? (
                     <textarea
                       rows={4}
@@ -203,7 +267,7 @@ export default function RecordForm({
                       required={field.required || false}
                       className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
                     >
-                      <option value="">{field.placeholder || ''}</option>
+                      <option value="">{field.placeholder || 'Select option'}</option>
 
                       {field.options?.map((option) => (
                         <option key={option} value={option}>
