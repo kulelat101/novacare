@@ -27,15 +27,30 @@ export default function RegistrationPage() {
     return (
       <AppShell
         title="Patient Registration"
-        subtitle="Admission information"
+        subtitle="Admission information and editable patient details"
       >
         <div className="space-y-6">
           <PageIntro
-            title="Admission Information"
-            description="Patients can view admission information only."
+            title="Patient Registration"
+            description="Admission information is view-only. You can update your demographics and emergency contact details."
           />
 
           <PatientAdmissionInfoView patient={activePatient} />
+
+          {activePatientId ? (
+            <PatientRegistrationForm
+              patientIdToEdit={activePatientId}
+              redirectAfterSave={false}
+              patientSelfEdit
+            />
+          ) : (
+            <section className="section-card p-6">
+              <h2 className="text-lg font-semibold text-slate-900">No linked patient chart</h2>
+              <p className="mt-2 text-sm text-slate-500">
+                Please contact hospital staff to link your portal account to your patient chart.
+              </p>
+            </section>
+          )}
         </div>
       </AppShell>
     );

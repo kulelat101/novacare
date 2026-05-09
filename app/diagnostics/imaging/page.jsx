@@ -5,6 +5,8 @@ import { serverTimestamp } from 'firebase/firestore';
 import AppShell from '@/components/AppShell';
 import PageIntro from '@/components/PageIntro';
 import SavedRecordsPanel from '@/components/SavedRecordsPanel';
+import { useAuth } from '@/components/AuthProvider';
+import { ROLES } from '@/lib/roles';
 import {
   createClientId,
   getLocalDateTime,
@@ -293,6 +295,8 @@ function ImagePreviewModal({ image, onClose }) {
 }
 
 export default function ImagingPage() {
+  const { profile } = useAuth();
+  const isPatientView = profile?.role === ROLES.PATIENT;
   const [formData, setFormData] = useState({ ...INITIAL_FORM });
   const [loadedRecordId, setLoadedRecordId] = useState('');
   const [images, setImages] = useState([]);
@@ -304,9 +308,10 @@ export default function ImagingPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const modeLabel = useMemo(() => {
+    if (isPatientView) return 'View-only imaging history';
     if (loadedRecordId) return 'Editing loaded history record';
     return 'New imaging report';
-  }, [loadedRecordId]);
+  }, [loadedRecordId, isPatientView]);
 
   function handleChange(name, value) {
     setFormData((prev) => ({
@@ -468,8 +473,12 @@ export default function ImagingPage() {
   return (
     <AppShell title="Imaging" subtitle="Diagnostic imaging reports with image attachments">
       <PageIntro
-        title="Imaging Report Entry"
-        description="Record imaging findings and attach diagnostic images for the active  patient."
+        title={isPatientView ? 'Imaging Reports' : 'Imaging Report Entry'}
+        description={
+          isPatientView
+            ? 'View your imaging reports and attached images.'
+            : 'Record imaging findings and attach diagnostic images for the active patient.'
+        }
       />
 
       <div className="space-y-6 pb-36">
@@ -491,6 +500,8 @@ export default function ImagingPage() {
           </div>
         )}
 
+        {!isPatientView && (
+          <>
         <div className="section-card p-5 lg:p-6">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -547,7 +558,7 @@ export default function ImagingPage() {
                 type="text"
                 value={formData.bodyPart}
                 onChange={(e) => handleChange('bodyPart', e.target.value)}
-                placeholder=""
+               
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
               />
             </div>
@@ -560,7 +571,7 @@ export default function ImagingPage() {
                 type="text"
                 value={formData.radiologist}
                 onChange={(e) => handleChange('radiologist', e.target.value)}
-                placeholder=""
+               
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
               />
             </div>
@@ -573,7 +584,7 @@ export default function ImagingPage() {
                 rows={4}
                 value={formData.findings}
                 onChange={(e) => handleChange('findings', e.target.value)}
-                placeholder=""
+               
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
               />
             </div>
@@ -586,7 +597,7 @@ export default function ImagingPage() {
                 rows={4}
                 value={formData.impression}
                 onChange={(e) => handleChange('impression', e.target.value)}
-                placeholder=""
+               
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
               />
             </div>
@@ -599,7 +610,7 @@ export default function ImagingPage() {
                 rows={3}
                 value={formData.remarks}
                 onChange={(e) => handleChange('remarks', e.target.value)}
-                placeholder=""
+               
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
               />
             </div>
@@ -688,15 +699,22 @@ export default function ImagingPage() {
             </div>
           )}
         </div>
+          </>
+        )}
 
         <SavedRecordsPanel
           collectionName={COLLECTION_NAME}
           title="Saved Imaging Reports"
-          description="Click a saved report to load it back into the imaging form."
+          description={
+            isPatientView
+              ? 'View imaging reports and attached images for your patient chart.'
+              : 'Click a saved report to load it back into the imaging form.'
+          }
           sortBy="updatedAt"
           sortDirection="desc"
           refreshKey={refreshKey}
-          onRecordSelect={handleLoadHistory}
+          canDelete={!isPatientView}
+          onRecordSelect={isPatientView ? undefined : handleLoadHistory}
           getTitle={(record, index) => {
             const type = record.imagingType || 'Imaging Report';
             const area = record.bodyPart ? ` - ${record.bodyPart}` : '';
@@ -765,6 +783,7 @@ export default function ImagingPage() {
         />
       </div>
 
+      {!isPatientView && (
       <div className="fixed bottom-6 left-4 right-4 z-50 lg:left-72 lg:right-0">
         <div className="action-shell rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
           <div className="flex flex-wrap justify-end gap-3">
@@ -792,6 +811,7 @@ export default function ImagingPage() {
           </div>
         </div>
       </div>
+      )}
 
       <ImagePreviewModal image={previewImage} onClose={() => setPreviewImage(null)} />
     </AppShell>

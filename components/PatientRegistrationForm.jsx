@@ -128,7 +128,7 @@ export function PatientAdmissionInfoView({ patient }) {
         <p className="section-kicker">View Only</p>
         <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-900">Admission Information</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Patient accounts can only view admission information. Editing is reserved for authorized staff.
+          Admission information is view-only. You may update your demographics and emergency contact details below.
         </p>
       </div>
 
@@ -153,6 +153,7 @@ export default function PatientRegistrationForm({
   patientIdToEdit = '',
   redirectAfterSave = true,
   compact = false,
+  patientSelfEdit = false,
   onSaved,
 }) {
   const router = useRouter();
@@ -360,8 +361,56 @@ export default function PatientRegistrationForm({
     setIsSendingReset(false);
 
     try {
-      const patientId = String(form.patientId || form.caseNo || generatePatientId()).trim();
+      const patientId = String(
+        form.patientId || patientIdToEdit || loadedPatient?.patientId || loadedPatient?.id || form.caseNo || generatePatientId()
+      ).trim();
       const emailAddress = String(form.emailAddress || form.email || '').trim().toLowerCase();
+
+      if (patientSelfEdit) {
+        if (!patientId) {
+          setError('Patient chart not found. Please contact hospital staff.');
+          return;
+        }
+
+        if (!form.firstName || !form.lastName || !emailAddress) {
+          setError('Please provide First Name, Family Name, and Email Address.');
+          return;
+        }
+
+        const selfUpdatePayload = {
+          lastName: form.lastName || '',
+          firstName: form.firstName || '',
+          middleName: form.middleName || '',
+          email: emailAddress,
+          emailAddress,
+          sex: form.sex || '',
+          age: form.age || '',
+          civilStatus: form.civilStatus || '',
+          dobBirthplace: form.dobBirthplace || '',
+          religion: form.religion || '',
+          address: form.address || '',
+          contactNo: form.contactNo || '',
+          emergName: form.emergName || '',
+          emergNo: form.emergNo || '',
+          emergAddress: form.emergAddress || '',
+          fullName: fullName || `${form.firstName} ${form.lastName}`,
+        };
+
+        await savePatientProfile(patientId, selfUpdatePayload, { merge: true });
+        const refreshedPatient = await refreshActivePatient(patientId);
+        const savedPatient = refreshedPatient || {
+          ...(loadedPatient || {}),
+          ...selfUpdatePayload,
+          id: patientId,
+          patientId,
+        };
+
+        setLoadedPatient(savedPatient);
+        setForm(normalizeForm(savedPatient));
+        setMessage('Demographics and emergency contact details updated.');
+        onSaved?.(savedPatient);
+        return;
+      }
 
       if (!patientId || !form.firstName || !form.lastName || !emailAddress) {
         setError('Please provide Patient ID, First Name, Family Name, and Email Address.');
@@ -525,7 +574,17 @@ export default function PatientRegistrationForm({
         </div>
       )}
 
-      {isEditMode && (
+      {patientSelfEdit && (
+        <section className="section-card p-5 lg:p-6">
+          <p className="section-kicker">Editable Patient Details</p>
+          <h2 className="mt-1 text-lg font-semibold text-slate-900 lg:text-xl">Demographics and Emergency Contact</h2>
+          <p className="mt-2 text-sm text-slate-500">
+            You can update only these sections. Admission information, diagnosis, billing, and discharge records remain view-only.
+          </p>
+        </section>
+      )}
+
+      {isEditMode && !patientSelfEdit && (
         <section className="section-card p-5 lg:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
@@ -581,6 +640,7 @@ export default function PatientRegistrationForm({
         </section>
       )}
 
+      {!patientSelfEdit && (
       <Section title="Admission Information">
         <Field label="Patient ID" required>
           <input className="input" value={form.patientId} onChange={(event) => updateField('patientId', event.target.value)} disabled={isEditMode} />
@@ -644,6 +704,7 @@ export default function PatientRegistrationForm({
           </>
         )}
       </Section>
+      )}
 
       <Section title="Demographics">
         <Field label="Family Name" required>
@@ -725,7 +786,9 @@ export default function PatientRegistrationForm({
             </div>
           </Section>
 
-          <Section title="Medical History">
+          {!patientSelfEdit && (
+            <>
+              <Section title="Medical History">
             <Field label="Other Diagnosis">
               <input className="input" value={form.otherDx} onChange={(event) => updateField('otherDx', event.target.value)} />
             </Field>
@@ -753,23 +816,25 @@ export default function PatientRegistrationForm({
             </div>
           </Section>
 
-          <Section title="Obstetric History">
-            <Field label="Gravida / Para">
-              <input className="input" value={form.gp} onChange={(event) => updateField('gp', event.target.value)} />
-            </Field>
+              <Section title="Obstetric History">
+                <Field label="Gravida / Para">
+                  <input className="input" value={form.gp} onChange={(event) => updateField('gp', event.target.value)} />
+                </Field>
 
-            <Field label="Previous Pregnancies">
-              <input className="input" value={form.prevPreg} onChange={(event) => updateField('prevPreg', event.target.value)} />
-            </Field>
+                <Field label="Previous Pregnancies">
+                  <input className="input" value={form.prevPreg} onChange={(event) => updateField('prevPreg', event.target.value)} />
+                </Field>
 
-            <Field label="Previous Deliveries">
-              <input className="input" value={form.prevDeliv} onChange={(event) => updateField('prevDeliv', event.target.value)} />
-            </Field>
+                <Field label="Previous Deliveries">
+                  <input className="input" value={form.prevDeliv} onChange={(event) => updateField('prevDeliv', event.target.value)} />
+                </Field>
 
-            <Field label="Pregnancy Complications">
-              <input className="input" value={form.pregComp} onChange={(event) => updateField('pregComp', event.target.value)} />
-            </Field>
-          </Section>
+                <Field label="Pregnancy Complications">
+                  <input className="input" value={form.pregComp} onChange={(event) => updateField('pregComp', event.target.value)} />
+                </Field>
+              </Section>
+            </>
+          )}
         </>
       )}
 
@@ -791,7 +856,7 @@ export default function PatientRegistrationForm({
               disabled={isSaving || isLoadingPatient}
               className="rounded-xl bg-cyan-600 px-5 py-3 font-medium text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSaving ? 'Saving...' : isEditMode ? 'Update Patient Details' : 'Save & Select Patient'}
+              {isSaving ? 'Saving...' : patientSelfEdit ? 'Save Demographics & Emergency Contact' : isEditMode ? 'Update Patient Details' : 'Save & Select Patient'}
             </button>
           </div>
         </div>
