@@ -361,13 +361,18 @@ export default function PatientRegistrationForm({
     setIsSendingReset(false);
 
     try {
-      const patientId = String(
-        form.patientId || patientIdToEdit || loadedPatient?.patientId || loadedPatient?.id || form.caseNo || generatePatientId()
+      const chartPatientId = String(
+        form.patientId || loadedPatient?.patientId || form.caseNo || generatePatientId()
+      ).trim();
+      const targetDocId = String(
+        isEditMode
+          ? loadedPatient?.docId || loadedPatient?.id || patientIdToEdit || chartPatientId
+          : chartPatientId
       ).trim();
       const emailAddress = String(form.emailAddress || form.email || '').trim().toLowerCase();
 
       if (patientSelfEdit) {
-        if (!patientId) {
+        if (!targetDocId) {
           setError('Patient chart not found. Please contact hospital staff.');
           return;
         }
@@ -378,6 +383,7 @@ export default function PatientRegistrationForm({
         }
 
         const selfUpdatePayload = {
+          patientId: chartPatientId,
           lastName: form.lastName || '',
           firstName: form.firstName || '',
           middleName: form.middleName || '',
@@ -396,13 +402,14 @@ export default function PatientRegistrationForm({
           fullName: fullName || `${form.firstName} ${form.lastName}`,
         };
 
-        await savePatientProfile(patientId, selfUpdatePayload, { merge: true });
-        const refreshedPatient = await refreshActivePatient(patientId);
+        await savePatientProfile(targetDocId, selfUpdatePayload, { merge: true });
+        const refreshedPatient = await refreshActivePatient(targetDocId);
         const savedPatient = refreshedPatient || {
           ...(loadedPatient || {}),
           ...selfUpdatePayload,
-          id: patientId,
-          patientId,
+          docId: targetDocId,
+          id: targetDocId,
+          patientId: chartPatientId,
         };
 
         setLoadedPatient(savedPatient);
@@ -412,14 +419,14 @@ export default function PatientRegistrationForm({
         return;
       }
 
-      if (!patientId || !form.firstName || !form.lastName || !emailAddress) {
+      if (!chartPatientId || !form.firstName || !form.lastName || !emailAddress) {
         setError('Please provide Patient ID, First Name, Family Name, and Email Address.');
         return;
       }
 
       const accountResult = (!form.patientUid && !form.patientUserId)
         ? await createOrLinkPatientAccount({
-            patientId,
+            patientId: targetDocId,
             email: emailAddress,
             fullName: fullName || `${form.firstName} ${form.lastName}`,
           })
@@ -428,8 +435,9 @@ export default function PatientRegistrationForm({
       const linkedUid = accountResult?.uid || form.patientUid || form.patientUserId || '';
       const payload = {
         ...form,
-        patientId,
-        id: patientId,
+        docId: targetDocId,
+        id: targetDocId,
+        patientId: chartPatientId,
         email: emailAddress,
         emailAddress,
         fullName: fullName || `${form.firstName} ${form.lastName}`,
@@ -442,10 +450,10 @@ export default function PatientRegistrationForm({
       let savedPatient;
 
       if (isEditMode) {
-        await savePatientProfile(patientId, payload, { merge: true });
+        await savePatientProfile(targetDocId, payload, { merge: true });
         await refreshPatients();
-        await refreshActivePatient(patientId);
-        savedPatient = { ...payload, id: patientId };
+        await refreshActivePatient(targetDocId);
+        savedPatient = { ...payload, docId: targetDocId, id: targetDocId };
         await selectPatient(savedPatient);
       } else {
         savedPatient = await createPatient(payload);
@@ -456,7 +464,7 @@ export default function PatientRegistrationForm({
           email: accountResult.email,
           temporaryPassword: accountResult.temporaryPassword,
           fullName: savedPatient.fullName || fullName || savedPatient.patientId,
-          patientId,
+          patientId: chartPatientId,
         });
       }
 

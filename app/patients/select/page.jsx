@@ -73,9 +73,9 @@ export default function PatientSelectPage() {
   }
 
   async function handleEditPatient(patient) {
-    const patientId = patient.patientId || patient.id;
+    const patientDocId = patient.docId || patient.id || patient.patientId;
     await selectPatient(patient);
-    router.push(`/admission/registration?patientId=${encodeURIComponent(patientId)}`);
+    router.push(`/admission/registration?patientId=${encodeURIComponent(patientDocId)}`);
   }
 
   async function handleUseDemoPatient() {
@@ -155,11 +155,12 @@ export default function PatientSelectPage() {
           ) : (
             <div className="divide-y divide-slate-100">
               {filteredPatients.map((patient) => {
-                const patientId = patient.patientId || patient.id;
-                const active = patientId === activePatientId;
+                const patientDocId = patient.docId || patient.id || patient.patientId;
+                const patientId = patient.patientId || patientDocId;
+                const active = patientDocId === activePatientId || patientId === activePatientId;
 
                 return (
-                  <div key={patientId} className="grid gap-4 px-6 py-5 xl:grid-cols-[1.2fr,1fr,1fr,auto] xl:items-center">
+                  <div key={patientDocId} className="grid gap-4 px-6 py-5 xl:grid-cols-[1.2fr,1fr,1fr,auto] xl:items-center">
                     <div>
                       <p className="text-lg font-bold text-slate-900">{formatPatientName(patient)}</p>
                       <p className="mt-1 text-sm text-slate-500">Patient ID: {patientId}</p>

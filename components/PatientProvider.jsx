@@ -14,6 +14,10 @@ import { useAuth } from './AuthProvider';
 
 const PatientContext = createContext(null);
 
+function getPatientDocId(patient) {
+  return patient?.docId || patient?.id || patient?.patientId || '';
+}
+
 export function formatPatientName(patient) {
   if (!patient) return 'No patient selected';
 
@@ -88,9 +92,10 @@ export function PatientProvider({ children }) {
 
         const profileRow = await loadPatientProfile(linkedPatientId);
         const patientRows = profileRow ? [profileRow] : [];
+        const resolvedPatientId = getPatientDocId(profileRow) || linkedPatientId;
 
-        setStoredActivePatientId(linkedPatientId);
-        setActivePatientId(linkedPatientId);
+        setStoredActivePatientId(resolvedPatientId);
+        setActivePatientId(resolvedPatientId);
         setActivePatient(profileRow);
         setPatients(patientRows);
 
@@ -119,13 +124,24 @@ export function PatientProvider({ children }) {
       return null;
     }
 
-    if (isPatientUser && patientId !== linkedPatientId) {
+    const isLinkedPatientLookup = patientId === linkedPatientId
+      || patientId === activePatient?.patientId
+      || patientId === getPatientDocId(activePatient);
+
+    if (isPatientUser && !isLinkedPatientLookup) {
       setPatientError('This patient account is not allowed to open another chart.');
       return null;
     }
 
     try {
       const profileRow = await loadPatientProfile(patientId);
+      const resolvedPatientId = getPatientDocId(profileRow) || patientId;
+
+      if (resolvedPatientId !== patientId) {
+        setStoredActivePatientId(resolvedPatientId);
+        setActivePatientId(resolvedPatientId);
+      }
+
       setActivePatient(profileRow);
       return profileRow;
     } catch (err) {
@@ -134,16 +150,20 @@ export function PatientProvider({ children }) {
       setActivePatient(null);
       return null;
     }
-  }, [activePatientId, user, loading, isPatientUser, linkedPatientId]);
+  }, [activePatientId, user, loading, isPatientUser, linkedPatientId, activePatient]);
 
   const selectPatient = useCallback(async (patientOrId) => {
     const patientId = typeof patientOrId === 'string'
       ? patientOrId
-      : patientOrId?.patientId || patientOrId?.id;
+      : getPatientDocId(patientOrId);
 
     if (!patientId) return null;
 
-    if (isPatientUser && patientId !== linkedPatientId) {
+    const isLinkedPatientSelection = patientId === linkedPatientId
+      || patientId === activePatient?.patientId
+      || patientId === getPatientDocId(activePatient);
+
+    if (isPatientUser && !isLinkedPatientSelection) {
       setPatientError('This patient account is not allowed to select another chart.');
       return null;
     }
@@ -158,7 +178,7 @@ export function PatientProvider({ children }) {
     }
 
     return refreshActivePatient(patientId);
-  }, [refreshActivePatient, isPatientUser, linkedPatientId]);
+  }, [refreshActivePatient, isPatientUser, linkedPatientId, activePatient]);
 
   const clearActivePatient = useCallback(() => {
     clearStoredActivePatientId();
@@ -169,10 +189,11 @@ export function PatientProvider({ children }) {
   const createPatient = useCallback(async (patientPayload, { makeActive = true } = {}) => {
     const id = await savePatientProfile(patientPayload.patientId, patientPayload);
     const rows = await refreshPatients();
-    const created = rows.find((patient) => patient.id === id || patient.patientId === id) || {
+    const created = rows.find((patient) => patient.docId === id || patient.id === id || patient.patientId === id) || {
       ...patientPayload,
+      docId: id,
       id,
-      patientId: id,
+      patientId: patientPayload.patientId || id,
     };
 
     if (makeActive) {
@@ -216,6 +237,9 @@ export function PatientProvider({ children }) {
         });
 
         if (mounted) {
+          const resolvedPatientId = getPatientDocId(profileRow) || linkedPatientId;
+          setStoredActivePatientId(resolvedPatientId);
+          setActivePatientId(resolvedPatientId);
           setActivePatient(profileRow);
           setPatients(profileRow ? [profileRow] : []);
           setLoadingPatients(false);
@@ -240,6 +264,11 @@ export function PatientProvider({ children }) {
       });
 
       if (mounted) {
+        const resolvedPatientId = getPatientDocId(profileRow) || storedPatientId;
+        if (resolvedPatientId !== storedPatientId) {
+          setStoredActivePatientId(resolvedPatientId);
+          setActivePatientId(resolvedPatientId);
+        }
         setActivePatient(profileRow);
       }
     }

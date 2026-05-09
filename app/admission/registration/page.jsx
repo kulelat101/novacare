@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import AppShell from '@/components/AppShell';
 import PageIntro from '@/components/PageIntro';
 import PatientRegistrationForm, { PatientAdmissionInfoView } from '@/components/PatientRegistrationForm';
@@ -9,17 +10,14 @@ import { useAuth } from '@/components/AuthProvider';
 import { usePatient } from '@/components/PatientProvider';
 import { ROLES } from '@/lib/roles';
 
-export default function RegistrationPage() {
+function RegistrationPageContent() {
   const { profile } = useAuth();
   const { activePatient, activePatientId } = usePatient();
-  const [patientIdToEdit, setPatientIdToEdit] = useState('');
+  const searchParams = useSearchParams();
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const params = new URLSearchParams(window.location.search);
-    setPatientIdToEdit(params.get('patientId') || '');
-  }, []);
+  const patientIdToEdit = searchParams.get('patientId') || '';
+  const activePatientEditId = activePatient?.docId || activePatient?.id || activePatientId;
+  const activePatientDisplayId = activePatient?.patientId || activePatientId;
 
   const isPatientView = profile?.role === ROLES.PATIENT;
 
@@ -80,14 +78,14 @@ export default function RegistrationPage() {
                 {patientIdToEdit
                   ? `Editing patient: ${patientIdToEdit}`
                   : activePatientId
-                    ? `Active patient: ${activePatientId}`
+                    ? `Active patient: ${activePatientDisplayId}`
                     : 'No active patient selected.'}
               </p>
             </div>
 
             <div className="flex flex-wrap gap-3">
-              {activePatientId && !patientIdToEdit && (
-                <Link href={`/admission/registration?patientId=${encodeURIComponent(activePatientId)}`} className="btn-secondary">
+              {activePatientEditId && !patientIdToEdit && (
+                <Link href={`/admission/registration?patientId=${encodeURIComponent(activePatientEditId)}`} className="btn-secondary">
                   Edit Active Patient
                 </Link>
               )}
@@ -104,5 +102,13 @@ export default function RegistrationPage() {
         <PatientRegistrationForm patientIdToEdit={patientIdToEdit} />
       </div>
     </AppShell>
+  );
+}
+
+export default function RegistrationPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegistrationPageContent />
+    </Suspense>
   );
 }
