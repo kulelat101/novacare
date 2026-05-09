@@ -56,3 +56,41 @@ body {
   }
 
 }
+
+/* iPad/tablet floating action bar fix
+   The action bar must behave like a bottom sheet on tablet/mobile and must stay
+   behind the slide-out sidebar overlay. Desktop remains unchanged. */
+@media (max-width: 1279px) {
+  .fixed.bottom-6.left-4.right-4.z-50,
+  .fixed.bottom-6.left-4.right-4.z-40 {
+    left: max(1rem, env(safe-area-inset-left)) !important;
+    right: max(1rem, env(safe-area-inset-right)) !important;
+    bottom: max(1rem, env(safe-area-inset-bottom)) !important;
+    z-index: 35 !important;
+    max-width: calc(100vw - 2rem) !important;
+  }
+
+  .fixed.bottom-6.left-4.right-4.z-50 > .content-shell,
+  .fixed.bottom-6.left-4.right-4.z-50 > .action-shell,
+  .fixed.bottom-6.left-4.right-4.z-40 > .content-shell,
+  .fixed.bottom-6.left-4.right-4.z-40 > .action-shell {
+    max-width: 100% !important;
+  }
+
+  .fixed.bottom-6.left-4.right-4.z-50 .btn-primary,
+  .fixed.bottom-6.left-4.right-4.z-50 .btn-secondary,
+  .fixed.bottom-6.left-4.right-4.z-40 .btn-primary,
+  .fixed.bottom-6.left-4.right-4.z-40 .btn-secondary {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .fixed.bottom-6.left-4.right-4.z-50 .btn-primary,
+  .fixed.bottom-6.left-4.right-4.z-50 .btn-secondary,
+  .fixed.bottom-6.left-4.right-4.z-40 .btn-primary,
+  .fixed.bottom-6.left-4.right-4.z-40 .btn-secondary {
+    flex: 1 1 auto;
+    min-width: 8rem;
+  }
+}

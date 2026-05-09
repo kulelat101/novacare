@@ -133,12 +133,12 @@ export default function AppShell({ title, subtitle, children, showHeader = true 
   return (
     <ProtectedRoute>
       <div className="min-h-screen overflow-x-hidden bg-[#f4f7fb]">
-        <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 overflow-hidden border-r border-slate-200/20 bg-[#0f2c52] xl:block">
+        <aside className="fixed inset-y-0 left-0 z-[60] hidden w-72 overflow-hidden border-r border-slate-200/20 bg-[#0f2c52] xl:block">
           <SidebarContent />
         </aside>
 
         {open && (
-          <div className="fixed inset-0 z-50 xl:hidden">
+          <div className="fixed inset-0 z-[80] xl:hidden">
             <button className="absolute inset-0 bg-slate-900/55" onClick={() => setOpen(false)} aria-label="Close menu" />
             <aside className="relative h-full w-80 max-w-[85vw] overflow-hidden bg-[#0f2c52] shadow-2xl">
               <button className="absolute right-4 top-4 rounded-xl p-2 text-white hover:bg-white/10" onClick={() => setOpen(false)}>
