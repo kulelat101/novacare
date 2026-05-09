@@ -16,10 +16,13 @@ const COLLECTION_NAME = 'billingItems';
 
 const categoryOptions = [
   'Room Charges',
-  'Procedure',
-  'Medications',
-  'Diagnostics',
   'Professional Fees',
+  'Operating Room Charges',
+  'Pharmacy',
+  'Laboratory',
+  'Diagnostics',
+  'Supplies and Materials',
+  'Miscellaneous Charges',
   'Deductions',
   'Others',
 ];
