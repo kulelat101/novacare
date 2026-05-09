@@ -138,7 +138,7 @@ async function prepareImageForFirestore(file) {
   }
 
   if (dataUrl.length > MAX_STORED_IMAGE_CHARS) {
-    throw new Error(`${file.name} is still too large after optimization. Please use a smaller demo image.`);
+    throw new Error(`${file.name} is still too large after optimization. Please use a smaller image.`);
   }
 
   return {
@@ -345,7 +345,7 @@ export default function ImagingPage() {
 
         if (nextTotal > MAX_TOTAL_STORED_IMAGE_CHARS) {
           throw new Error(
-            `${file.name} would make the saved report too large. Please attach fewer or smaller demo images.`
+            `${file.name} would make the saved report too large. Please attach fewer or smaller images.`
           );
         }
 
@@ -469,7 +469,7 @@ export default function ImagingPage() {
     <AppShell title="Imaging" subtitle="Diagnostic imaging reports with image attachments">
       <PageIntro
         title="Imaging Report Entry"
-        description="Record imaging findings and attach diagnostic images for the active demo patient."
+        description="Record imaging findings and attach diagnostic images for the active  patient."
       />
 
       <div className="space-y-6 pb-36">
@@ -487,7 +487,7 @@ export default function ImagingPage() {
 
         {isPreparingImages && (
           <div className="rounded-2xl border border-cyan-200 bg-cyan-50 px-5 py-4 text-sm font-semibold text-cyan-800">
-            Preparing image for demo storage...
+            Preparing image for storage...
           </div>
         )}
 
@@ -499,7 +499,7 @@ export default function ImagingPage() {
                 Imaging Details
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                Fill out the report fields and attach demo images. Images are stored directly with the Firestore report for faster demo saving.
+                Fill out the report fields and attach images. Images are stored directly with the Firestore report for faster saving.
               </p>
             </div>
 

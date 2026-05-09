@@ -30,7 +30,7 @@ export default function LoginLogsPage() {
     <AppShell title="Login Logs" subtitle="Tracks login and logout date/time only">
       <section className="card overflow-hidden">
         <div className="border-b border-slate-200 p-5">
-          <h2 className="text-lg font-bold text-slate-900">Access Monitoring Demo</h2>
+          <h2 className="text-lg font-bold text-slate-900">Access Monitoring</h2>
           <p className="mt-1 text-sm text-slate-500">This page records only login and logout timestamps. It does not track page visits or clinical actions.</p>
         </div>
 

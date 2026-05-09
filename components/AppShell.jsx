@@ -74,7 +74,7 @@ function SidebarContent({ onNavigate }) {
           </div>
           <div>
             <p className="text-lg font-bold tracking-tight text-white">NovaCare</p>
-            <p className="text-xs text-cyan-100/80">Clinical workflow demo</p>
+            <p className="text-xs text-cyan-100/80">Clinical workflow</p>
           </div>
         </div>
       </div>
@@ -122,7 +122,7 @@ export default function AppShell({ title, subtitle, children, showHeader = true 
   const { activePatient, activePatientId } = usePatient();
   const [open, setOpen] = useState(false);
   const router = useRouter();
-  const displayName = useMemo(() => profile?.fullName || user?.email || 'Demo User', [profile, user]);
+  const displayName = useMemo(() => profile?.fullName || user?.email || 'User', [profile, user]);
 
   async function handleLogout() {
     await closeLoginLog();

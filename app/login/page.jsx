@@ -23,7 +23,7 @@ export default function LoginPage() {
     try {
       const credential = await signInWithEmailAndPassword(auth, email, password);
       const profileSnap = await getDoc(doc(db, 'users', credential.user.uid));
-      const profile = profileSnap.exists() ? profileSnap.data() : { role: 'nurse', fullName: 'Demo Nurse' };
+      const profile = profileSnap.exists() ? profileSnap.data() : { role: 'nurse', fullName: 'Nurse' };
       await createLoginLog(credential.user, profile.role, profile.fullName);
       router.replace('/patients/select');
     } catch (err) {
@@ -101,7 +101,7 @@ export default function LoginPage() {
             </form>
 
             <p className="mt-6 text-center text-sm text-slate-500">
-              Need demo users?{" "}
+              Need users?{" "}
               <Link href="/signup" className="font-semibold text-cyan-700 hover:text-cyan-800">
                 Create account
               </Link>

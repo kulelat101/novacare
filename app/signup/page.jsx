@@ -33,7 +33,7 @@ export default function SignupPage() {
       });
       router.replace('/login');
     } catch (err) {
-      setError(err.message || 'Unable to create demo user.');
+      setError(err.message || 'Unable to create user.');
     } finally {
       setLoading(false);
     }
@@ -43,7 +43,7 @@ export default function SignupPage() {
     <main className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
       <form onSubmit={handleSubmit} className="card w-full max-w-lg p-6 sm:p-8">
         <p className="text-sm font-semibold uppercase tracking-wide text-cyan-700">NovaCare</p>
-        <h1 className="mt-2 text-3xl font-black text-slate-900">Create demo account</h1>
+        <h1 className="mt-2 text-3xl font-black text-slate-900">Create an account</h1>
         <p className="mt-2 text-sm text-slate-500">Choose a role to test role-based access control.</p>
 
         <div className="mt-6 grid gap-4">

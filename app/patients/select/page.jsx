@@ -149,7 +149,7 @@ export default function PatientSelectPage() {
             <div className="px-6 py-10 text-sm text-slate-500">Loading patients...</div>
           ) : filteredPatients.length === 0 ? (
             <div className="px-6 py-10 text-sm text-slate-500">
-              No patients found. Register a patient or use the demo patient.
+              No patients found. Register a patient or use the patient.
             </div>
           ) : (
             <div className="divide-y divide-slate-100">

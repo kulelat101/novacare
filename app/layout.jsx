@@ -3,7 +3,7 @@ import AuthWrap from '@/components/AuthWrap';
 
 export const metadata = {
   title: 'NovaCare',
-  description: 'BSN210 Nursing Informatics Hospital Information System demo',
+  description: 'BSN210 Nursing Informatics Hospital Information System',
 };
 
 export default function RootLayout({ children }) {

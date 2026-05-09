@@ -602,7 +602,7 @@ export default function LaboratoryPage() {
           />
 
           <p className="mt-2 text-xs text-slate-500">
-            Reference ranges are shown for demo guidance and may vary by hospital,
+            Reference ranges are shown for guidance and may vary by hospital,
             patient age, sex, and laboratory standard.
           </p>
         </section>
