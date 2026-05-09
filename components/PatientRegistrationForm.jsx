@@ -201,7 +201,7 @@ export default function PatientRegistrationForm({ redirectAfterSave = true, comp
 
             <Field label="Mode of Admission">
               <select className="input" value={form.modeAdmission} onChange={(event) => updateField('modeAdmission', event.target.value)}>
-                <option value="">Select option</option>
+                <option value=""></option>
                 <option value="Elective">Elective</option>
                 <option value="Emergency">Emergency</option>
                 <option value="Walk-in">Walk-in</option>
@@ -227,7 +227,7 @@ export default function PatientRegistrationForm({ redirectAfterSave = true, comp
 
         <Field label="Sex">
           <select className="input" value={form.sex} onChange={(event) => updateField('sex', event.target.value)}>
-            <option value="">Select option</option>
+            <option value=""></option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
           </select>
@@ -239,7 +239,7 @@ export default function PatientRegistrationForm({ redirectAfterSave = true, comp
 
         <Field label="Civil Status">
           <select className="input" value={form.civilStatus} onChange={(event) => updateField('civilStatus', event.target.value)}>
-            <option value="">Select option</option>
+            <option value=""></option>
             <option value="Single">Single</option>
             <option value="Married">Married</option>
             <option value="Widowed">Widowed</option>

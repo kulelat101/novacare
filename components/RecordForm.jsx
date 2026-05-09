@@ -203,7 +203,7 @@ export default function RecordForm({
                       required={field.required || false}
                       className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
                     >
-                      <option value="">{field.placeholder || 'Select option'}</option>
+                      <option value="">{field.placeholder || ''}</option>
 
                       {field.options?.map((option) => (
                         <option key={option} value={option}>

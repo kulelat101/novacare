@@ -5,19 +5,34 @@ import AppShell from '@/components/AppShell';
 import { fetchRecent } from '@/lib/db';
 
 function formatTime(value) {
-  if (!value?.toDate) return '—';
-  return value.toDate().toLocaleString();
+  if (!value) return '—';
+
+  const date = typeof value.toDate === 'function'
+    ? value.toDate()
+    : new Date(value);
+
+  if (Number.isNaN(date.getTime())) return '—';
+
+  return date.toLocaleString();
 }
 
 export default function LoginLogsPage() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     async function loadLogs() {
       try {
-        const rows = await fetchRecent('loginLogs', 50);
+        setError('');
+
+        // Login log documents use loginAt/logoutAt, not createdAt.
+        // Ordering by loginAt also displays older logs that do not have createdAt.
+        const rows = await fetchRecent('loginLogs', 50, 'loginAt');
         setLogs(rows);
+      } catch (err) {
+        console.error('Failed to load login logs:', err);
+        setError('Unable to load login logs. Please check the browser console and Firestore rules.');
       } finally {
         setLoading(false);
       }
@@ -31,8 +46,16 @@ export default function LoginLogsPage() {
       <section className="card overflow-hidden">
         <div className="border-b border-slate-200 p-5">
           <h2 className="text-lg font-bold text-slate-900">Access Monitoring</h2>
-          <p className="mt-1 text-sm text-slate-500">This page records only login and logout timestamps. It does not track page visits or clinical actions.</p>
+          <p className="mt-1 text-sm text-slate-500">
+            This page records only login and logout timestamps. It does not track page visits or clinical actions.
+          </p>
         </div>
+
+        {error && (
+          <div className="border-b border-red-100 bg-red-50 px-5 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
@@ -48,17 +71,25 @@ export default function LoginLogsPage() {
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               {loading ? (
-                <tr><td className="px-5 py-4 text-slate-500" colSpan="6">Loading...</td></tr>
+                <tr>
+                  <td className="px-5 py-4 text-slate-500" colSpan="6">Loading...</td>
+                </tr>
               ) : logs.length === 0 ? (
-                <tr><td className="px-5 py-4 text-slate-500" colSpan="6">No login logs yet.</td></tr>
+                <tr>
+                  <td className="px-5 py-4 text-slate-500" colSpan="6">No login logs yet.</td>
+                </tr>
               ) : logs.map((log) => (
                 <tr key={log.id}>
-                  <td className="px-5 py-4 font-medium text-slate-900">{log.fullName}</td>
-                  <td className="px-5 py-4 text-slate-600">{log.email}</td>
-                  <td className="px-5 py-4 capitalize text-slate-600">{log.role}</td>
+                  <td className="px-5 py-4 font-medium text-slate-900">{log.fullName || '—'}</td>
+                  <td className="px-5 py-4 text-slate-600">{log.email || '—'}</td>
+                  <td className="px-5 py-4 capitalize text-slate-600">{log.role || '—'}</td>
                   <td className="px-5 py-4 text-slate-600">{formatTime(log.loginAt)}</td>
                   <td className="px-5 py-4 text-slate-600">{formatTime(log.logoutAt)}</td>
-                  <td className="px-5 py-4"><span className="rounded-full bg-cyan-50 px-2 py-1 text-xs font-semibold text-cyan-700">{log.status}</span></td>
+                  <td className="px-5 py-4">
+                    <span className="rounded-full bg-cyan-50 px-2 py-1 text-xs font-semibold text-cyan-700">
+                      {log.status || '—'}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>
