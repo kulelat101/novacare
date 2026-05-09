@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import PageIntro from '@/components/PageIntro';
 import { useAuth } from '@/components/AuthProvider';
+import { usePatient } from '@/components/PatientProvider';
 import { ROLES } from '@/lib/roles';
 import {
   clearPatientCollection,
@@ -51,6 +52,7 @@ function displayText(value) {
 
 export default function BillingPage() {
   const { profile } = useAuth();
+  const { activePatientId } = usePatient();
   const isPatientView = profile?.role === ROLES.PATIENT;
   const [rows, setRows] = useState([createEmptyRow()]);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,7 +65,13 @@ export default function BillingPage() {
     setError('');
 
     try {
+      if (!activePatientId) {
+        setRows(isPatientView ? [] : [createEmptyRow()]);
+        return;
+      }
+
       const savedRows = await loadPatientRows(COLLECTION_NAME, {
+        patientId: activePatientId,
         sortBy: 'createdAt',
         sortDirection: 'asc',
       });
@@ -71,7 +79,8 @@ export default function BillingPage() {
       setRows(savedRows.length > 0 ? savedRows : isPatientView ? [] : [createEmptyRow()]);
     } catch (err) {
       console.error(err);
-      setError('Failed to load billing records from Firestore.');
+      setError(isPatientView ? '' : 'Failed to load billing records from Firestore.');
+      setRows(isPatientView ? [] : [createEmptyRow()]);
     } finally {
       setIsLoading(false);
     }
@@ -79,7 +88,7 @@ export default function BillingPage() {
 
   useEffect(() => {
     loadRows();
-  }, [isPatientView]);
+  }, [activePatientId, isPatientView]);
 
   const summary = useMemo(() => {
     return rows.reduce(
@@ -145,7 +154,7 @@ export default function BillingPage() {
     setError('');
 
     try {
-      await clearPatientCollection(COLLECTION_NAME);
+      await clearPatientCollection(COLLECTION_NAME, { patientId: activePatientId });
       setRows([createEmptyRow()]);
       setMessage('Billing sheet cleared.');
     } catch (err) {
@@ -162,7 +171,7 @@ export default function BillingPage() {
     setError('');
 
     try {
-      await savePatientRows(COLLECTION_NAME, rows);
+      await savePatientRows(COLLECTION_NAME, rows, { patientId: activePatientId });
       setMessage('Billing records saved to Firestore.');
     } catch (err) {
       console.error(err);
@@ -246,7 +255,7 @@ export default function BillingPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1050px] border-collapse">
+            <table className={`w-full border-collapse ${isPatientView ? 'min-w-[720px]' : 'min-w-[1050px]'}`}>
               <thead className="sticky top-0 z-10 bg-slate-50">
                 <tr className="border-b border-slate-200">
                   {headers.map((header) => (
@@ -354,7 +363,7 @@ export default function BillingPage() {
         </section>
 
         {!isPatientView && (
-          <div className="fixed bottom-6 left-4 right-4 z-40 lg:left-72 lg:right-0">
+          <div className="fixed bottom-6 left-4 right-4 z-40 xl:left-72 xl:right-0">
             <div className="action-shell">
               <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white/95 px-6 py-4 shadow-2xl backdrop-blur">
                 <div>

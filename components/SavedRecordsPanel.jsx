@@ -235,7 +235,11 @@ export default function SavedRecordsPanel({
       });
     } catch (err) {
       console.error(err);
-      setError('');
+      setError(
+        err?.code === 'permission-denied'
+          ? 'Firestore rules are blocking this patient from reading these saved records. Update Firestore rules to allow linked patient accounts to read their own patient subcollections.'
+          : 'Failed to load saved records from Firestore.'
+      );
       setRecords([]);
       setSelectedId('');
     } finally {

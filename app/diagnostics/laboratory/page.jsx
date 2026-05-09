@@ -408,47 +408,25 @@ export default function LaboratoryPage() {
     }
   }
 
+  return (
+    <AppShell title="Laboratory" subtitle="Diagnostic results">
+      <div className={isPatientView ? 'space-y-6' : 'space-y-6 pb-36'}>
+        <PageIntro
+          title={isPatientView ? 'Laboratory Results' : 'Laboratory Result Entry'}
+          description={
+            isPatientView
+              ? 'View saved laboratory reports connected to your patient chart.'
+              : 'Select a laboratory order, then manually enter the corresponding patient result values. New reports start blank.'
+          }
+        />
 
-  if (isPatientView) {
-    return (
-      <AppShell title="Laboratory" subtitle="View diagnostic results">
-        <div className="space-y-6">
-          <PageIntro
-            title="Laboratory Results"
-            description="View saved laboratory reports connected to your patient chart."
-          />
-
+        {isPatientView && (
           <div className="rounded-2xl border border-cyan-100 bg-cyan-50 px-5 py-4 text-sm font-medium text-cyan-800">
             This page is view-only for patient accounts.
           </div>
+        )}
 
-          <SavedRecordsPanel
-            collectionName="laboratoryResults"
-            title="Laboratory Reports"
-            description="Saved CBC, coagulation, blood typing, urinalysis, fecalysis, chemistry, immunology, and clinical microscopy reports for this patient."
-            emptyMessage="No laboratory reports are available yet."
-            sortBy="reportDate"
-            sortDirection="desc"
-            canDelete={false}
-            suppressLoadError
-            getTitle={(record) => record.order || record.panelName || record.title || 'Laboratory Report'}
-            getSubtitle={(record) => `${formatDate(record.reportDate)} • ${record.reportStatus || 'No status'}`}
-            getBadge={(record) => record.category || 'Lab'}
-          />
-        </div>
-      </AppShell>
-    );
-  }
-
-  return (
-    <AppShell title="Laboratory" subtitle="Diagnostic results">
-      <div className="space-y-6 pb-36">
-        <PageIntro
-          title="Laboratory Result Entry"
-          description="Select a laboratory order, then manually enter the corresponding patient result values. New reports start blank."
-        />
-
-        {(message || error) && (
+        {(message || error) && !isPatientView && (
           <div
             className={`rounded-2xl border px-5 py-4 text-sm font-medium ${
               error
@@ -460,6 +438,7 @@ export default function LaboratoryPage() {
           </div>
         )}
 
+        {!isPatientView && (
         <section className="section-card p-5 lg:p-6">
           <div className="grid gap-5 lg:grid-cols-2">
             <div>
@@ -536,7 +515,9 @@ export default function LaboratoryPage() {
             </div>
           </div>
         </section>
+        )}
 
+        {!isPatientView && (
         <section className="section-card overflow-hidden">
           {selectedPanel ? (
             <>
@@ -551,7 +532,7 @@ export default function LaboratoryPage() {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[900px] border-collapse">
+                <table className="w-full min-w-[760px] border-collapse">
                   <thead className="bg-slate-50">
                     <tr className="border-b border-slate-200">
                       <th className="w-[30%] px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
@@ -626,7 +607,9 @@ export default function LaboratoryPage() {
             </div>
           )}
         </section>
+        )}
 
+        {!isPatientView && (
         <section className="section-card p-5 lg:p-6">
           <label className="label">Remarks / Interpretation</label>
           <textarea
@@ -642,21 +625,28 @@ export default function LaboratoryPage() {
             patient age, sex, and laboratory standard.
           </p>
         </section>
+        )}
 
         <SavedRecordsPanel
           collectionName="laboratoryResults"
           title="Saved Laboratory Reports"
-          description=""
+          description={
+            isPatientView
+              ? 'Saved CBC, coagulation, blood typing, urinalysis, fecalysis, chemistry, immunology, and clinical microscopy reports for this patient.'
+              : 'View CBC, coagulation, blood typing, urinalysis, fecalysis, chemistry, immunology, and clinical microscopy reports for this patient. Click a saved report to load it into the form.'
+          }
           sortBy="reportDate"
           sortDirection="desc"
           refreshKey={refreshKey}
-          onRecordSelect={loadSavedLaboratoryReport}
+          canDelete={!isPatientView}
+          onRecordSelect={isPatientView ? undefined : loadSavedLaboratoryReport}
           getTitle={(record) => record.order || record.panelName || record.title || 'Laboratory Report'}
           getSubtitle={(record) => `${formatDate(record.reportDate)} • ${record.reportStatus || 'No status'}`}
           getBadge={(record) => record.category || 'Lab'}
         />
       </div>
 
+      {!isPatientView && (
       <div className="fixed bottom-6 left-4 right-4 z-50 xl:left-72 xl:right-0">
         <div className="action-shell rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
           <div className="flex flex-wrap justify-end gap-3">
@@ -680,6 +670,7 @@ export default function LaboratoryPage() {
           </div>
         </div>
       </div>
+      )}
     </AppShell>
   );
 }
