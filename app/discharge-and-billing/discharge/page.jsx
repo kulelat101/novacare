@@ -59,13 +59,6 @@ const fields = [
     required: true,
   },
   {
-    section: 'Discharge Diagnosis',
-    name: 'proceduresPerformed',
-    label: 'Procedures Performed',
-    type: 'textarea',
-    placeholder: '',
-  },
-  {
     section: 'Discharge Instructions',
     name: 'dischargeMedications',
     label: 'Discharge Medications',
