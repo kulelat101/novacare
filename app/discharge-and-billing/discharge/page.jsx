@@ -51,7 +51,7 @@ const fields = [
     required: true,
   },
   {
-    section: 'Discharge Diagnostics',
+    section: 'Discharge Diagnosis',
     name: 'finalDiagnosis',
     label: 'Final Diagnosis',
     type: 'textarea',
@@ -59,14 +59,7 @@ const fields = [
     required: true,
   },
   {
-    section: 'Discharge Diagnostics',
-    name: 'diagnosticSummary',
-    label: 'Diagnostic Summary',
-    type: 'textarea',
-    placeholder: '',
-  },
-  {
-    section: 'Discharge Diagnostics',
+    section: 'Discharge Diagnosis',
     name: 'proceduresPerformed',
     label: 'Procedures Performed',
     type: 'textarea',
