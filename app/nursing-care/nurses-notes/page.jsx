@@ -231,8 +231,8 @@ export default function NursesNotesPage() {
                 </label>
                 <textarea
                   rows={3}
-                  value={form.diagnosis}
-                  onChange={(e) => handleChange('diagnosis', e.target.value)}
+                  value={form.planning}
+                  onChange={(e) => handleChange('planning', e.target.value)}
                   placeholder=""
                   className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                 />
