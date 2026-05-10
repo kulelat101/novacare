@@ -624,7 +624,7 @@ export default function ImagingPage() {
                 Imaging Image Attachments
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                Attach fake/sample images only. Maximum {MAX_IMAGE_COUNT} images. Small images are saved directly with the report, so Firebase Storage is not required.
+                Maximum {MAX_IMAGE_COUNT} images. Small images are saved directly with the report, so Firebase Storage is not required.
               </p>
             </div>
 
