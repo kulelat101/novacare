@@ -7,7 +7,9 @@ import {
   sendPatientPasswordResetEmail,
 } from '@/lib/patientAccounts';
 import {
+  deletePatientProfile,
   getPatientDocumentId,
+  getPatientVisibleId,
   loadPatientProfile,
   savePatientProfile,
 } from '@/lib/patientFirestore';
@@ -159,6 +161,8 @@ export default function PatientRegistrationForm({
 }) {
   const router = useRouter();
   const {
+    activePatientId,
+    clearActivePatient,
     createPatient,
     refreshPatients,
     refreshActivePatient,
@@ -173,6 +177,9 @@ export default function PatientRegistrationForm({
   const [createdAccount, setCreatedAccount] = useState(null);
   const [isCopied, setIsCopied] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isEditMode = Boolean(patientIdToEdit);
 
@@ -202,6 +209,8 @@ export default function PatientRegistrationForm({
       setCreatedAccount(null);
       setIsCopied(false);
       setIsSendingReset(false);
+      setShowDeleteConfirm(false);
+      setDeleteConfirmText('');
 
       if (!patientIdToEdit) {
         setLoadedPatient(null);
@@ -258,6 +267,8 @@ export default function PatientRegistrationForm({
     setCreatedAccount(null);
     setIsCopied(false);
     setIsSendingReset(false);
+    setShowDeleteConfirm(false);
+    setDeleteConfirmText('');
   }
 
   async function copyTextToClipboard(text) {
@@ -352,6 +363,90 @@ export default function PatientRegistrationForm({
     setCreatedAccount(null);
     setIsCopied(false);
     router.replace('/dashboard');
+  }
+
+  function getDeletePatientName() {
+    return fullName || loadedPatient?.fullName || form.patientId || patientIdToEdit || 'this patient';
+  }
+
+  function openDeletePatientConfirm() {
+    setError('');
+    setMessage('');
+    setDeleteConfirmText('');
+    setShowDeleteConfirm(true);
+  }
+
+  function closeDeletePatientConfirm() {
+    if (isDeleting) return;
+    setDeleteConfirmText('');
+    setShowDeleteConfirm(false);
+  }
+
+  function isDeletedActivePatient(deletedIds = []) {
+    const activeId = String(activePatientId || '').trim();
+    if (!activeId) return false;
+
+    const candidateIds = new Set([
+      patientIdToEdit,
+      form.patientId,
+      getPatientDocumentId(loadedPatient),
+      getPatientVisibleId(loadedPatient),
+      loadedPatient?.id,
+      loadedPatient?.docId,
+      loadedPatient?.documentId,
+      loadedPatient?.patientId,
+      loadedPatient?.visiblePatientId,
+      ...deletedIds,
+    ].map((value) => String(value || '').trim()).filter(Boolean));
+
+    return candidateIds.has(activeId);
+  }
+
+  async function confirmDeletePatient() {
+    if (!isEditMode || patientSelfEdit) return;
+
+    const patientDocumentId = getPatientDocumentId(loadedPatient) || patientIdToEdit || form.patientId;
+    if (!patientDocumentId) {
+      setError('Patient record not found. Please reload the page and try again.');
+      return;
+    }
+
+    if (deleteConfirmText.trim().toUpperCase() !== 'DELETE') {
+      setError('Type DELETE to confirm patient deletion.');
+      return;
+    }
+
+    setIsDeleting(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const result = await deletePatientProfile(patientDocumentId);
+      await refreshPatients();
+
+      if (isDeletedActivePatient(result.deletedPatientDocumentIds)) {
+        clearActivePatient();
+      }
+
+      setShowDeleteConfirm(false);
+      setDeleteConfirmText('');
+      setLoadedPatient(null);
+      setForm(emptyForm());
+      setMessage(
+        `Patient deleted. Removed ${result.deletedRecordCount || 0} saved clinical record(s).${
+          result.deletedUserProfileIds?.length
+            ? ` Removed ${result.deletedUserProfileIds.length} linked patient portal profile(s).`
+            : ''
+        }`
+      );
+      onSaved?.(null);
+      router.replace('/patients/select');
+    } catch (err) {
+      console.error(err);
+      setError(err?.message || 'Failed to delete patient. Please check your Firestore rules and try again.');
+    } finally {
+      setIsDeleting(false);
+    }
   }
 
   async function savePatient() {
@@ -582,6 +677,55 @@ export default function PatientRegistrationForm({
                   Continue to Dashboard
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[75] flex items-center justify-center bg-slate-950/55 px-4 py-6">
+          <div className="w-full max-w-xl rounded-3xl border border-red-200 bg-white p-6 shadow-2xl">
+            <div>
+              <p className="section-kicker text-red-600">Delete Patient</p>
+              <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
+                Delete {getDeletePatientName()}?
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                This permanently removes the patient chart and saved clinical records from the known patient subcollections. If a linked patient portal profile exists in Firestore, that profile will also be removed.
+              </p>
+              <p className="mt-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Firebase Authentication users cannot be fully deleted from this browser-only page. The updated login guard blocks accounts that no longer have a Firestore user profile.
+              </p>
+            </div>
+
+            <div className="mt-5">
+              <label className="label">Type DELETE to confirm</label>
+              <input
+                className="input"
+                value={deleteConfirmText}
+                onChange={(event) => setDeleteConfirmText(event.target.value)}
+                disabled={isDeleting}
+              />
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={closeDeletePatientConfirm}
+                disabled={isDeleting}
+                className="rounded-xl border border-slate-300 bg-white px-5 py-3 font-medium transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmDeletePatient}
+                disabled={isDeleting || deleteConfirmText.trim().toUpperCase() !== 'DELETE'}
+                className="rounded-xl bg-red-600 px-5 py-3 font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Patient'}
+              </button>
             </div>
           </div>
         </div>
@@ -859,24 +1003,39 @@ export default function PatientRegistrationForm({
 
       <div className="fixed bottom-6 left-4 right-4 z-50 xl:left-72 xl:right-0">
         <div className="content-shell rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
-          <div className="flex flex-wrap justify-end gap-3">
-            <button
-              type="button"
-              onClick={clearForm}
-              disabled={isSaving}
-              className="rounded-xl border border-slate-300 bg-white px-5 py-3 font-medium transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          <div className="flex flex-wrap justify-between gap-3">
+            <div>
+              {isEditMode && !patientSelfEdit && (
+                <button
+                  type="button"
+                  onClick={openDeletePatientConfirm}
+                  disabled={isSaving || isLoadingPatient || isDeleting}
+                  className="rounded-xl border border-red-200 bg-red-50 px-5 py-3 font-medium text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Delete Patient
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                onClick={clearForm}
+                disabled={isSaving || isDeleting}
+                className="rounded-xl border border-slate-300 bg-white px-5 py-3 font-medium transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isEditMode ? 'Reset' : 'Clear'}
             </button>
 
-            <button
-              type="button"
-              onClick={savePatient}
-              disabled={isSaving || isLoadingPatient}
-              className="rounded-xl bg-cyan-600 px-5 py-3 font-medium text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSaving ? 'Saving...' : patientSelfEdit ? 'Save Demographics & Emergency Contact' : isEditMode ? 'Update Patient Details' : 'Save & Select Patient'}
-            </button>
+              <button
+                type="button"
+                onClick={savePatient}
+                disabled={isSaving || isLoadingPatient || isDeleting}
+                className="rounded-xl bg-cyan-600 px-5 py-3 font-medium text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSaving ? 'Saving...' : patientSelfEdit ? 'Save Demographics & Emergency Contact' : isEditMode ? 'Update Patient Details' : 'Save & Select Patient'}
+              </button>
+            </div>
           </div>
         </div>
       </div>

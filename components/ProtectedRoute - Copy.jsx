@@ -2,6 +2,8 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { ROLES, canAccess, getDefaultRoute } from '@/lib/roles';
 import { useAuth } from './AuthProvider';
 import { usePatient } from './PatientProvider';
@@ -29,6 +31,13 @@ export default function ProtectedRoute({ children }) {
 
     if (!user) {
       router.replace('/login');
+      return;
+    }
+
+    if (!profile || profile?.disabled || profile?.deletedAt) {
+      signOut(auth).finally(() => {
+        router.replace('/login');
+      });
       return;
     }
 
@@ -65,7 +74,7 @@ export default function ProtectedRoute({ children }) {
     isPasswordChangePage,
   ]);
 
-  if (loading || !user || loadingPatients) {
+  if (loading || !user || loadingPatients || !profile || profile?.disabled || profile?.deletedAt) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="card p-6 text-center">

@@ -319,7 +319,7 @@ export default function IVSheetPage() {
                         <input
                           type="text"
                           value={row.nurse || ''}
-                          onChange={(e) => updateRow(row.id, 'remarks', e.target.value)}
+                          onChange={(e) => updateRow(row.id, 'nurse', e.target.value)}
                           placeholder=""
                           className="w-[220px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                         />
