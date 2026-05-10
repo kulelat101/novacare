@@ -7,6 +7,7 @@ import {
   addPatientRecord,
   clearPatientCollection,
   deletePatientDocument,
+  savePatientDocument,
   getLocalDate,
   getLocalTime,
   loadPatientRows,
@@ -20,7 +21,6 @@ const emptyForm = {
   shift: 'AM (6-2)',
   assessment: '',
   diagnosis: '',
-  planning: '',
   interventions: '',
   evaluation: '',
   nurse: '',
@@ -39,6 +39,7 @@ export default function NursesNotesPage() {
   const [notes, setNotes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [editingNote, setEditingNote] = useState(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -74,12 +75,38 @@ export default function NursesNotesPage() {
 
   const clearForm = () => {
     setForm(createFreshForm());
+    setEditingNote(null);
     setMessage('');
     setError('');
   };
 
+
+  const loadNoteForEditing = (note) => {
+    setForm({
+      date: note.date || getLocalDate(),
+      time: note.time || getLocalTime(),
+      shift: note.shift || '',
+      assessment: note.assessment || '',
+      diagnosis: note.diagnosis || '',
+      interventions: note.interventions || '',
+      evaluation: note.evaluation || '',
+      nurse: note.nurse || '',
+    });
+    setEditingNote({
+      id: note.id || note.docId || note.documentId,
+      __patientDocumentId: note.__patientDocumentId || note.patientDocId || note.patientDocumentId || '',
+    });
+    setMessage("Saved nurse's note loaded. Changes will update the selected note instead of creating a new one.");
+    setError('');
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
+
   const saveNote = async () => {
-    if (!form.assessment && !form.diagnosis && !form.planning && !form.interventions && !form.evaluation) {
+    if (!form.assessment && !form.diagnosis && !form.interventions && !form.evaluation) {
       setError('Please enter at least one note detail before saving.');
       return;
     }
@@ -89,26 +116,44 @@ export default function NursesNotesPage() {
     setError('');
 
     try {
-      await addPatientRecord(COLLECTION_NAME, form);
-      setMessage("Nurse's note saved successfully.");
+      if (editingNote?.id) {
+        await savePatientDocument(COLLECTION_NAME, editingNote.id, form, {
+          patientId: editingNote.__patientDocumentId,
+        });
+        setMessage("Nurse's note updated.");
+      } else {
+        await addPatientRecord(COLLECTION_NAME, form);
+        setMessage("Nurse's note saved to Firestore.");
+      }
+
       setForm(createFreshForm());
+      setEditingNote(null);
       await loadNotes();
     } catch (err) {
       console.error(err);
-      setError("Failed to save nurse's note.");
+      setError(editingNote?.id ? "Failed to update nurse's note." : "Failed to save nurse's note.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const deleteNote = async (id) => {
+  const deleteNote = async (note) => {
+    const noteId = note?.id || note?.docId || note?.documentId;
+    if (!noteId) return;
+
     setIsSaving(true);
     setMessage('');
     setError('');
 
     try {
-      await deletePatientDocument(COLLECTION_NAME, id);
-      setNotes((prev) => prev.filter((note) => note.id !== id));
+      await deletePatientDocument(COLLECTION_NAME, noteId, {
+        patientId: note.__patientDocumentId,
+      });
+      setNotes((prev) => prev.filter((item) => item.id !== noteId));
+      if (editingNote?.id === noteId) {
+        setEditingNote(null);
+        setForm(createFreshForm());
+      }
       setMessage("Nurse's note deleted.");
     } catch (err) {
       console.error(err);
@@ -130,6 +175,8 @@ export default function NursesNotesPage() {
     try {
       await clearPatientCollection(COLLECTION_NAME);
       setNotes([]);
+      setEditingNote(null);
+      setForm(createFreshForm());
       setMessage("All nurse's notes cleared.");
     } catch (err) {
       console.error(err);
@@ -143,7 +190,7 @@ export default function NursesNotesPage() {
     <AppShell title="Nurse's Notes" subtitle="Restricted nursing documentation">
       <div className="pb-36">
         <PageIntro
-          title="ADPIE Nurse's Notes"
+          title="APIE Nurse's Notes"
           description="Document structured nursing notes and interventions."
         />
 
@@ -159,9 +206,15 @@ export default function NursesNotesPage() {
           </div>
         )}
 
+        {editingNote?.id && (
+          <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-medium text-amber-800">
+            Editing a saved nurse's note. Press Update Entry to save changes to the selected history item, or Clear Form to start a new note.
+          </div>
+        )}
+
         <div className="space-y-6">
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-6 text-xl font-semibold text-slate-900">New Note Entry</h2>
+            <h2 className="mb-6 text-xl font-semibold text-slate-900">{editingNote?.id ? 'Edit Note Entry' : 'New Note Entry'}</h2>
 
             <div className="mb-6 grid gap-4 md:grid-cols-3">
               <div>
@@ -214,25 +267,12 @@ export default function NursesNotesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-800">
-                  D — Nursing Diagnosis
+                  P — Problem / Nursing Diagnosis
                 </label>
                 <textarea
                   rows={3}
                   value={form.diagnosis}
                   onChange={(e) => handleChange('diagnosis', e.target.value)}
-                  placeholder=""
-                  className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-800">
-                  P — Planning
-                </label>
-                <textarea
-                  rows={3}
-                  value={form.planning}
-                  onChange={(e) => handleChange('planning', e.target.value)}
                   placeholder=""
                   className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
                 />
@@ -282,7 +322,7 @@ export default function NursesNotesPage() {
               <div>
                 <h2 className="text-xl font-semibold text-slate-900">Saved Notes</h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  {isLoading ? 'Loading ...' : 'Newest notes appear first.'}
+                  {isLoading ? 'Loading from Firestore...' : 'Newest notes appear first.'}
                 </p>
               </div>
 
@@ -319,9 +359,18 @@ export default function NursesNotesPage() {
 
                       <button
                         type="button"
-                        onClick={() => deleteNote(note.id)}
+                        onClick={() => loadNoteForEditing(note)}
                         disabled={isSaving}
-                        className="ml-auto rounded-xl border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="ml-auto rounded-xl border border-cyan-200 bg-white px-3 py-1.5 text-xs font-semibold text-cyan-700 transition hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => deleteNote(note)}
+                        disabled={isSaving}
+                        className="rounded-xl border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Delete
                       </button>
@@ -334,12 +383,7 @@ export default function NursesNotesPage() {
                       </div>
 
                       <div>
-                        <p className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-500">Diagnosis</p>
-                        <p className="whitespace-pre-wrap text-sm text-slate-700">{note.diagnosis || '—'}</p>
-                      </div>
-
-                      <div>
-                        <p className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-500">Planning</p>
+                        <p className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-500">Problem / Diagnosis</p>
                         <p className="whitespace-pre-wrap text-sm text-slate-700">{note.diagnosis || '—'}</p>
                       </div>
 
@@ -366,7 +410,7 @@ export default function NursesNotesPage() {
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white/95 px-6 py-4 shadow-2xl backdrop-blur">
               <div>
                 <p className="text-sm font-semibold text-slate-800">Nurse's Notes</p>
-                <p className="text-xs text-slate-500">Patient-scoped documentation saved successfully.</p>
+                <p className="text-xs text-slate-500">Patient-scoped documentation saved in Firestore.</p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
@@ -385,7 +429,7 @@ export default function NursesNotesPage() {
                   disabled={isSaving}
                   className="rounded-xl bg-cyan-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSaving ? 'Saving...' : 'Save Entry'}
+                  {isSaving ? 'Saving...' : editingNote?.id ? 'Update Entry' : 'Save Entry'}
                 </button>
               </div>
             </div>

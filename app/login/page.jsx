@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
+import { sendPasswordResetEmail, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { createLoginLog } from '@/lib/audit';
@@ -33,7 +33,19 @@ export default function LoginPage() {
     try {
       const credential = await signInWithEmailAndPassword(auth, normalizeEmail(email), password);
       const profileSnap = await getDoc(doc(db, 'users', credential.user.uid));
-      const profile = profileSnap.exists() ? profileSnap.data() : { role: 'nurse', fullName: 'Nurse' };
+
+      if (!profileSnap.exists()) {
+        await signOut(auth).catch(() => {});
+        throw new Error('ACCOUNT_PROFILE_NOT_FOUND');
+      }
+
+      const profile = profileSnap.data();
+
+      if (profile?.disabled || profile?.deletedAt) {
+        await signOut(auth).catch(() => {});
+        throw new Error('ACCOUNT_DISABLED');
+      }
+
       await createLoginLog(credential.user, profile);
 
       if (profile?.mustChangePassword) {
@@ -43,7 +55,13 @@ export default function LoginPage() {
 
       router.replace(getDefaultRoute(profile?.role));
     } catch (err) {
-      setError('Unable to login. Check your Firebase account credentials.');
+      if (err?.message === 'ACCOUNT_PROFILE_NOT_FOUND') {
+        setError('This account is no longer linked to a NovaCare user profile. Please contact hospital staff.');
+      } else if (err?.message === 'ACCOUNT_DISABLED') {
+        setError('This account has been disabled. Please contact hospital staff.');
+      } else {
+        setError('Unable to login. Check your Firebase account credentials.');
+      }
     } finally {
       setLoading(false);
     }

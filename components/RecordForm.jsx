@@ -6,6 +6,7 @@ import {
   addPatientRecord,
   getLocalDate,
   getLocalDateTime,
+  savePatientDocument,
 } from '@/lib/patientFirestore';
 
 function flattenAssessmentRows(rows = []) {
@@ -123,6 +124,7 @@ export default function RecordForm({
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [editingRecord, setEditingRecord] = useState(null);
 
   const groupedFields = useMemo(() => {
     return fields.reduce((acc, field) => {
@@ -264,13 +266,26 @@ export default function RecordForm({
     setError('');
 
     try {
-      await addPatientRecord(collectionName, formData);
-      setMessage('Record saved successfully.');
+      if (editingRecord?.id) {
+        await savePatientDocument(collectionName, editingRecord.id, formData, {
+          patientId: editingRecord.__patientDocumentId,
+        });
+        setMessage('Saved record updated successfully.');
+      } else {
+        await addPatientRecord(collectionName, formData);
+        setMessage('Record saved successfully.');
+      }
+
       setFormData(initialState);
+      setEditingRecord(null);
       setRefreshKey((prev) => prev + 1);
     } catch (err) {
       console.error(err);
-      setError('Failed to save record. Please check your Firestore connection.');
+      setError(
+        editingRecord?.id
+          ? 'Failed to update record. Please check your Firestore connection.'
+          : 'Failed to save record. Please check your Firestore connection.'
+      );
     } finally {
       setIsSaving(false);
     }
@@ -278,6 +293,7 @@ export default function RecordForm({
 
   const handleClear = () => {
     setFormData(initialState);
+    setEditingRecord(null);
     setMessage('');
     setError('');
   };
@@ -296,7 +312,11 @@ export default function RecordForm({
     });
 
     setFormData(loadedData);
-    setMessage('Saved record loaded into the form.');
+    setEditingRecord({
+      id: record.id || record.docId || record.documentId,
+      __patientDocumentId: record.__patientDocumentId || record.patientDocId || record.patientDocumentId || '',
+    });
+    setMessage('Saved record loaded. Changes will update the selected record instead of creating a new one.');
     setError('');
 
     window.scrollTo({
@@ -477,6 +497,12 @@ export default function RecordForm({
           </div>
         )}
 
+        {editingRecord?.id && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-medium text-amber-800">
+            Editing a saved record. Press Update Record to save changes to the selected history item, or Clear to start a new entry.
+          </div>
+        )}
+
         {Object.entries(groupedFields).map(([section, sectionFields]) => {
           const isAssessmentOnly = sectionFields.every((field) => field.type === 'assessment-table');
 
@@ -654,7 +680,7 @@ export default function RecordForm({
               disabled={isSaving}
               className="rounded-xl bg-cyan-600 px-5 py-3 font-medium text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSaving ? 'Saving...' : 'Save Record'}
+              {isSaving ? 'Saving...' : editingRecord?.id ? 'Update Record' : 'Save Record'}
             </button>
           </div>
         </div>

@@ -24,6 +24,7 @@ const createEmptyRow = () => ({
   dateConsumed: '',
   timeConsumed: '',
   status: '',
+  nurse: '',
   remarks: '',
 });
 
@@ -221,6 +222,7 @@ export default function IVSheetPage() {
                     'Time Consumed',
                     'Duration',
                     'Status',
+                    'Nurse',
                     'Remarks',
                     'Actions',
                   ].map((header) => (
@@ -311,6 +313,16 @@ export default function IVSheetPage() {
                             </option>
                           ))}
                         </select>
+                      </td>
+
+                      <td className="px-3 py-3">
+                        <input
+                          type="text"
+                          value={row.nurse || ''}
+                          onChange={(e) => updateRow(row.id, 'remarks', e.target.value)}
+                          placeholder=""
+                          className="w-[220px] rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+                        />
                       </td>
 
                       <td className="px-3 py-3">
