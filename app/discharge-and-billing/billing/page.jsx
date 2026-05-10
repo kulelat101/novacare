@@ -172,7 +172,7 @@ export default function BillingPage() {
 
     try {
       await savePatientRows(COLLECTION_NAME, rows, { patientId: activePatientId });
-      setMessage('Billing records saved to Firestore.');
+      setMessage('Billing records saved successfully.');
     } catch (err) {
       console.error(err);
       setError('Failed to save billing records.');
@@ -369,7 +369,7 @@ export default function BillingPage() {
                 <div>
                   <p className="text-sm font-semibold text-slate-800">Billing Sheet</p>
                   <p className="text-xs text-slate-500">
-                    {isLoading ? 'Loading records from Firestore...' : 'Save visible rows for the active patient.'}
+                    {isLoading ? 'Loading records ...' : 'Save visible rows for the active patient.'}
                   </p>
                 </div>
 

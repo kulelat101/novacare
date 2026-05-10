@@ -193,7 +193,7 @@ function BillingClearancePanel() {
           </h2>
 
           <p className="mt-1 text-sm text-slate-500">
-            Billing status is automatically computed from the Firestore Billing Sheet.
+            Billing status is automatically computed from the Billing Sheet.
           </p>
         </div>
 

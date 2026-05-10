@@ -397,7 +397,7 @@ export default function LaboratoryPage() {
         results: resultRows,
       });
 
-      setMessage(`${selectedPanel.order} saved to Firestore.`);
+      setMessage(`${selectedPanel.order} saved successfully.`);
       setRefreshKey((prev) => prev + 1);
       clearForm();
     } catch (err) {

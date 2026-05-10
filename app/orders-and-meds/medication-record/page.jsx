@@ -121,7 +121,7 @@ export default function MedicationRecordPage() {
 
     try {
       await savePatientRows(COLLECTION_NAME, rows);
-      setMessage('Medication records saved to Firestore.');
+      setMessage('Medication records saved successfully.');
     } catch (err) {
       console.error(err);
       setError('Failed to save medication records.');
@@ -336,7 +336,7 @@ export default function MedicationRecordPage() {
               <div>
                 <p className="text-sm font-semibold text-slate-800">Medication Record</p>
                 <p className="text-xs text-slate-500">
-                  {isLoading ? 'Loading records from Firestore...' : 'Save visible rows for the active patient.'}
+                  {isLoading ? 'Loading records ...' : 'Save visible rows for the active patient.'}
                 </p>
               </div>
 

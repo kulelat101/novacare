@@ -510,7 +510,7 @@ export default function ImagingPage() {
                 Imaging Details
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                Fill out the report fields and attach images. Images are stored directly with the Firestore report for faster saving.
+                Fill out the report fields and attach images.
               </p>
             </div>
 

@@ -523,7 +523,7 @@ export default function PatientRegistrationForm({
               <p className="section-kicker text-emerald-600">Patient Account Created</p>
               <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Copy the temporary credentials</h2>
               <p className="mt-2 text-sm text-slate-500">
-                This temporary password is shown only now. It is not saved in Firestore and cannot be viewed again later.
+                This temporary password is shown only now. It is not saved in the database and cannot be viewed again later.
               </p>
             </div>
 

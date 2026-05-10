@@ -226,7 +226,7 @@ export default function IntakeOutputPage() {
 
       setMessage(
         rowsToSave.length > 0
-          ? 'Intake and output records saved to Firestore.'
+          ? 'Intake and output records saved successfully.'
           : 'No filled rows to save. Existing intake and output records were cleared.'
       );
     } catch (err) {
@@ -469,7 +469,7 @@ export default function IntakeOutputPage() {
                 <p className="text-sm font-semibold text-slate-800">Intake & Output</p>
                 <p className="text-xs text-slate-500">
                   {isLoading
-                    ? 'Loading records from Firestore...'
+                    ? 'Loading records ...'
                     : 'Blank rows are ignored when saving.'}
                 </p>
               </div>
